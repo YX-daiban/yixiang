@@ -473,6 +473,14 @@ document.getElementById("category-combo-input").oninput = function(){
   const kw = this.value.trim();
   renderCategoryDropdown(kw);
 }
+//点击页面任意空白处自动收起下拉框
+document.addEventListener("click",function(e){
+  const comboWrap = document.querySelector(".combo-wrap");
+  const comboDrop = document.getElementById("category-combo-dropdown");
+  if(comboDrop && !comboWrap.contains(e.target)){
+    comboDrop.classList.add("hidden");
+  }
+});
 function renderCategoryDropdown(keyword){
   const comboInput = document.getElementById("category-combo-input");
   const comboDrop = document.getElementById("category-combo-dropdown");
