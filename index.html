@@ -519,7 +519,7 @@ async function aiImproveNote(){
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
   btn.disabled = true;
   try{
-    const resp = await fetch(`${data.aiConfig.baseUrl}/chat/completions`,{
+    const resp = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(data.aiConfig.baseUrl + "/chat/completions")}`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
@@ -580,6 +580,7 @@ function login(){
   if(!user){tip.innerText="账号或密码错误";return;}
   currentUser = user;
   if(!currentUser.permissions) currentUser.permissions = {};
+  localStorage.setItem("_logged_user", un);
   showMainPage();
 }
 //动态渲染顶部标签
@@ -737,6 +738,7 @@ function showMainPage(){
 }
 function logout(){
   currentUser=null;
+  localStorage.removeItem("_logged_user");
   document.getElementById("page-main").classList.add("hidden");
   document.getElementById("page-login").classList.remove("hidden");
   document.getElementById("login-user").value="";
@@ -1334,15 +1336,25 @@ window.onload = async function(){
     //加个标记，避免循环刷新
     if(sessionStorage.getItem("_justSynced") === "1"){
       sessionStorage.removeItem("_justSynced");
-      return;
+    } else {
+      console.log("正在从云端同步最新数据...");
+      const oldUserCount = data.users.length;
+      await fetchCloudData();
+      //如果拉取后成员数量变了，才刷新一次
+      if(data.users.length !== oldUserCount){
+        sessionStorage.setItem("_justSynced", "1");
+        location.reload();
+      }
     }
-    console.log("正在从云端同步最新数据...");
-    const oldUserCount = data.users.length;
-    await fetchCloudData();
-    //如果拉取后成员数量变了，才刷新一次
-    if(data.users.length !== oldUserCount){
-      sessionStorage.setItem("_justSynced", "1");
-      location.reload();
+  }
+  //自动登录
+  const savedUser = localStorage.getItem("_logged_user");
+  if(savedUser){
+    const user = data.users.find(u=>u.username===savedUser);
+    if(user){
+      currentUser = user;
+      if(!currentUser.permissions) currentUser.permissions = {};
+      showMainPage();
     }
   }
 }
