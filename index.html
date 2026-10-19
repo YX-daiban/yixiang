@@ -1355,6 +1355,10 @@ window.onload = async function(){
       }
     }
   }
+  //自动初始化EmailJS
+  if(data.mailConfig?.publicKey){
+    emailjs.init(data.mailConfig.publicKey);
+  }
   //自动登录
   const savedUser = localStorage.getItem("_logged_user");
   if(savedUser){
