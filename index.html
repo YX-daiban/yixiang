@@ -519,7 +519,7 @@ async function aiImproveNote(){
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
   btn.disabled = true;
   try{
-    const resp = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(data.aiConfig.baseUrl + "/chat/completions")}`,{
+    const resp = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(data.aiConfig.baseUrl + "/chat/completions")}`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
