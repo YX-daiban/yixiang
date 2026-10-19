@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>逸想待办</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    * {margin: 0;padding: 0;box-sizing: border-box;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC","Hiragino Sans GB", "Microsoft YaHei", sans-serif;}
+    body {min-height: 100vh;background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 45%, #f5f3ff 100%);color: #1e293b;padding: 24px 16px 40px;}
+    .app-shell {max-width: 1120px;margin: 0 auto;}
+    .top-bar {display: flex;align-items: center;justify-content: space-between;margin-bottom: 20px;padding: 14px 20px;background: rgba(255, 255, 255, 0.78);border: 1px solid rgba(255, 255, 255, 0.8);border-radius: 18px;box-shadow: 0 10px 30px rgba(59, 130, 246, 0.08);backdrop-filter: blur(10px);position: relative;}
+    .brand-center-wrap {position: absolute;left: 50%;transform: translateX(-50%);display: flex;align-items: center;gap: 10px;font-size: 17px;font-weight: 700;color: #475569;}
+    .brand-logo {width: 34px;height: 34px;border-radius: 50%;border: 3px solid #475569;display: flex;align-items: center;justify-content: center;color: #475569;font-size: 18px;background: #fff;}
+    .brand-logo i {transform: rotate(-20deg);font-weight:900;}
+    .user-info {display: flex;align-items: center;gap: 10px;font-size: 14px;color: #475569;margin-left:auto;}
+    .avatar {width: 34px;height: 34px;border-radius: 50%;background: linear-gradient(135deg, #38bdf8, #6366f1);color: #fff;display: flex;align-items: center;justify-content: center;font-weight: 700;font-size: 13px;}
+    .card {background: rgba(255, 255, 255, 0.82);border: 1px solid rgba(255, 255, 255, 0.9);border-radius: 22px;padding: 24px;box-shadow: 0 18px 45px rgba(71, 85, 105, 0.12);backdrop-filter: blur(14px);}
+    .login-card {max-width: 440px;margin: 60px auto 0;padding: 32px;background: rgba(255, 255, 255, 0.86);border: 1px solid rgba(255, 255, 255, 0.9);border-radius: 24px;box-shadow: 0 25px 55px rgba(79, 70, 229, 0.18);backdrop-filter: blur(16px);}
+    .login-header {text-align:center;margin-bottom:18px}
+    .login-logo-wrap{width:64px;height:64px;border-radius:50%;border:4px solid #475569;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+    .login-logo-wrap i{color:#475569;font-size:32px}
+    .login-title {font-size: 24px;font-weight: 800;color: #475569;margin-bottom: 8px;text-align:center;}
+    .login-subtitle {color: #64748b;font-size: 14px;margin-bottom: 24px;text-align:center;}
+    h2 {font-size: 19px;font-weight: 700;color: #0f172a;margin-bottom: 18px;display: flex;align-items: center;gap: 8px;}
+    h2 i {color: #6366f1;}
+    h3 {font-size: 16px;font-weight: 700;color: #1e293b;margin: 20px 0 14px;display: flex;align-items: center;gap: 8px;}
+    h3 i {color: #7c3aed;font-size: 14px;}
+    .form-item {margin-bottom: 16px;}
+    label {display: block;margin-bottom: 8px;font-size: 13px;color: #475569;font-weight: 600;}
+    input,select,textarea {width: 100%;padding: 12px 14px;border: 1px solid #e2e8f0;border-radius: 14px;font-size: 14px;background: #fff;transition: all 0.25s ease;color: #0f172a;}
+    input:focus,select:focus,textarea:focus {outline: none;border-color: #818cf8;background: #fff;box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.18);}
+    textarea {resize: vertical;min-height: 100px;line-height: 1.6;}
+    button {padding: 11px 18px;border: none;border-radius: 14px;cursor: pointer;font-size: 14px;font-weight: 600;transition: all 0.25s ease;margin: 6px 8px 6px 0;display: inline-flex;align-items: center;gap: 7px;}
+    .btn-primary {background: linear-gradient(135deg, #6366f1, #4f46e5);color: #fff;box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35);}
+    .btn-primary:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(79, 70, 229, 0.42);}
+    .btn-purple {background: linear-gradient(135deg, #a855f7, #7c3aed);color: #fff;box-shadow: 0 10px 24px rgba(139, 92, 246, 0.35);}
+    .btn-purple:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(124, 58, 237, 0.42);}
+    .btn-teal {background: linear-gradient(135deg, #22d3ee, #06b6d4);color: #fff;box-shadow: 0 10px 24px rgba(34, 211, 238, 0.32);}
+    .btn-teal:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(6, 182, 212, 0.4);}
+    .btn-success {background: linear-gradient(135deg, #34d399, #10b981);color: #fff;box-shadow: 0 10px 24px rgba(52, 211, 153, 0.32);}
+    .btn-success:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(16, 185, 129, 0.4);}
+    .btn-gray {background: #f1f5f9;color: #334155;border: 1px solid #e2e8f0;}
+    .btn-gray:hover {background: #e2e8f0;}
+    .btn-danger {background: linear-gradient(135deg, #f87171, #ef4444);color: #fff;box-shadow: 0 10px 24px rgba(239, 68, 68, 0.32);}
+    .btn-danger:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(239, 68, 68, 0.4);}
+    .row {display: flex;gap: 14px;flex-wrap: wrap;}
+    .row .form-item {flex: 1;min-width: 220px;}
+    .tip-text {font-size: 12px;color: #64748b;margin: -6px 0 14px;padding-left: 4px;}
+    .divider {height: 1px;background: linear-gradient(90deg, transparent, #e2e8f0, transparent);margin: 24px 0;border: none;}
+    .tab-bar {display: flex;gap: 4px;margin-bottom: 20px;padding: 8px;background: rgba(255, 255, 255, 0.7);border: 1px solid rgba(255, 255, 255, 0.9);border-radius: 18px;flex-wrap: wrap;align-items:center;}
+    .tab {padding: 10px 16px;cursor: pointer;border-radius: 14px;color: #475569;font-weight: 600;font-size: 14px;transition: all 0.25s ease;display: inline-flex;align-items: center;gap: 8px;}
+    .tab:hover {background: #f1f5f9;color: #0f172a;}
+    .tab.active {background: linear-gradient(135deg, #6366f1, #8b5cf6);color: #fff;box-shadow: 0 10px 24px rgba(139, 92, 246, 0.35);}
+    .hidden {display: none !important;}
+    .todo-item {border: 1px solid #eef2ff;border-radius: 18px;padding: 18px;margin: 14px 0;background: linear-gradient(145deg, #ffffff, #f8faff);transition: all 0.25s ease;}
+    .todo-item:hover {transform: translateY(-2px);box-shadow: 0 18px 40px rgba(99, 102, 241, 0.14);border-color: #e0e7ff;}
+    .todo-item.overdue {border-color: #fca5a5;background: linear-gradient(145deg, #fef2f2, #fff1f2);}
+    .todo-item.overdue .todo-title strong::after {content: " 已逾期";color: #dc2626;font-size: 12px;background: #fee2e2;padding: 2px 8px;border-radius: 8px;margin-left: 6px;}
+    .todo-actions {margin-top: 12px;display: flex;gap: 8px;}
+    .todo-actions button {margin: 0;padding: 6px 12px;font-size: 12px;border-radius: 8px;}
+    .stat-row {display: grid;grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));gap: 12px;margin-bottom: 20px;}
+    .stat-card {background: #fff;border-radius: 16px;padding: 16px;text-align: center;border: 1px solid #eef2ff;}
+    .stat-card .num {font-size: 28px;font-weight: 800;margin: 8px 0 4px;}
+    .stat-card .label {font-size: 12px;color: #64748b;}
+    .stat-total .num {color: #6366f1;}
+    .stat-doing .num {color: #f59e0b;}
+    .stat-finish .num {color: #10b981;}
+    .stat-overdue .num {color: #ef4444;}
+    .todo-title {display: flex;align-items: center;gap: 10px;flex-wrap: wrap;margin-bottom: 10px;}
+    .todo-title strong {font-size: 16px;color: #0f172a;}
+    .meta-row {display: flex;flex-wrap: wrap;gap: 10px;margin-top: 10px;font-size: 13px;color: #475569;}
+    .meta-row span {display: inline-flex;align-items: center;gap: 6px;background: #f1f5f9;padding: 6px 10px;border-radius: 10px;}
+    .category-tag {background: #eef2ff !important;color: #4f46e5 !important;}
+    .priority-high {background: #fef2f2 !important;color: #dc2626 !important;}
+    .priority-mid {background: #fff7ed !important;color: #ea580c !important;}
+    .priority-low {background: #ecfdf5 !important;color: #059669 !important;}
+    .status-wait {background: #f1f5f9 !important;color: #475569 !important;}
+    .status-doing {background: #eef2ff !important;color: #4f46e5 !important;}
+    .status-finish {background: #ecfdf5 !important;color: #059669 !important;}
+    .summary-block {background: linear-gradient(135deg, #f0f9ff, #eef2ff);border: 1px solid #e0e7ff;border-radius: 20px;padding: 20px;margin-top: 24px;}
+    .summary-group {margin: 12px 0;padding: 14px;background: #fff;border-radius: 16px;border: 1px solid #eef2ff;}
+    .summary-group strong {color: #4f46e5;}
+    .log-item {font-size: 14px;color: #475569;padding: 12px;border-bottom: 1px dashed #e2e8f0;}
+    .ai-result {background: #f8fafc;padding: 16px;border-radius: 16px;margin-top: 14px;white-space: pre-wrap;border: 1px solid #e2e8f0;line-height: 1.7;}
+    .category-block {border: 1px solid #e2e8f0;border-radius: 16px;padding: 14px 16px;margin: 12px 0;display: flex;gap: 12px;align-items: center;justify-content: space-between;background: #fff;}
+    .filter-bar {background: rgba(255, 255, 255, 0.7);padding: 16px;border-radius: 18px;margin-bottom: 20px;border: 1px solid rgba(255, 255, 255, 0.9);}
+    .login-tip {color: #dc2626;margin-top: 14px;font-size: 14px;text-align: center;min-height:20px}
+    .combo-wrap {position: relative;width: 100%;}
+    .combo-input {width: 100%;padding: 12px 14px;border: 1px solid #e2e8f0;border-radius: 14px;font-size: 14px;background: #fff;transition: all 0.25s ease;}
+    .combo-input:focus {outline: none;border-color: #818cf8;box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.18);}
+    .combo-dropdown {position: absolute;top: calc(100% + 6px);left: 0;right: 0;background: #fff;border: 1px solid #e2e8f0;border-radius: 16px;box-shadow: 0 18px 40px rgba(71, 85, 105, 0.18);max-height: 240px;overflow-y: auto;z-index: 99;}
+    .combo-item {padding: 12px 14px;cursor: pointer;font-size: 14px;color: #334155;}
+    .combo-item:hover {background: #eef2ff;color: #4f46e5;}
+    /* 权限多选下拉 */
+    .perm-dropdown-wrap{position:relative;width:100%;max-width:360px}
+    .perm-select-box{width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .perm-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.1);z-index:99;max-height:220px;overflow-y:auto;padding:6px;}
+    .perm-item{padding:8px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;border-radius:8px;}
+    .perm-item:hover{background:#eef2ff;}
+    .perm-item input[type="checkbox"]{width:16px;height:16px;margin:0;cursor:pointer;}
+    .perm-item label{margin:0;cursor:pointer;font-size:14px;color:#334155;}
+    .perm-tag{display:inline-block;background:#eef2ff;color:#4f46e5;border-radius:8px;padding:4px 8px;font-size:12px;margin:2px;}
+    /*邮件弹窗样式*/
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;}
+    .modal-box{background:#fff;border-radius:20px;width:90%;max-width:520px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+    .modal-overlay.show{display:flex;}
+    .admin-mail-send-block{background:#eef2ff;padding:18px;border-radius:18px;margin-top:20px;border:1px solid #c7d2fe;}
+    @media (max-width: 720px) {
+      body {padding: 14px 10px 30px;}
+      .card,.login-card {padding: 18px;border-radius: 18px;}
+      .tab {padding: 9px 13px;font-size: 13px;}
+      button {width: 100%;justify-content: center;margin: 6px 0;}
+      .row {flex-direction: column;}
+      .brand-center-wrap{position:relative;left:unset;transform:none;margin:0 auto;}
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="top-bar">
+      <div class="brand-center-wrap">
+        <div class="brand-logo"><i class="fa-solid fa-check"></i></div>逸想待办
+      </div>
+      <div class="user-info" id="user-info" style="display:none">
+        <div class="avatar" id="user-avatar">A</div>
+        <span id="user-name">admin</span>
+      </div>
+    </div>
+    <div id="page-login" class="login-card">
+      <div class="login-header">
+        <div class="login-logo-wrap"><i class="fa-solid fa-check"></i></div>
+        <h2 class="login-title">逸想待办</h2>
+        <div class="login-subtitle">登录你的待办管理系统</div>
+      </div>
+      <div class="form-item">
+        <label><i class="fa-regular fa-user"></i> 账号</label>
+        <input id="login-user" placeholder="请输入账号">
+      </div>
+      <div class="form-item">
+        <label><i class="fa-solid fa-lock"></i> 密码</label>
+        <input id="login-pwd" type="password" placeholder="请输入密码">
+      </div>
+      <button id="login-btn" class="btn-primary" style="width:100%;justify-content:center">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> 登录
+      </button>
+      <div id="syncConfigBlock" style="margin-top:16px;padding-top:16px;border-top:1px dashed #e2e8f0">
+        <div style="font-size:13px;color:#64748b;margin-bottom:8px;text-align:center">换电脑？粘贴同步码自动恢复邮箱和AI配置</div>
+        <input id="sync-code-input" placeholder="粘贴你的配置同步码" style="margin-bottom:8px" />
+        <button id="btn-apply-sync-code" class="btn-gray" style="width:100%;justify-content:center;margin:0">应用同步码</button>
+      </div>
+      <div id="login-tip" class="login-tip"></div>
+    </div>
+    <div id="page-main" class="hidden">
+      <div class="card">
+        <div class="tab-bar" id="tabBarContainer">
+          <!-- 标签会根据当前用户权限动态渲染 -->
+          <button id="logout-btn" class="btn-gray"><i class="fa-solid fa-right-from-bracket"></i> 退出登录</button>
+        </div>
+        <div id="tab-todo">
+          <h2><i class="fa-solid fa-circle-plus"></i> 新增待办</h2>
+          <div class="form-item" id="assign-wrap" style="display:none">
+            <label>指派给（管理员可用）</label>
+            <select id="assign-user"></select>
+          </div>
+          <div class="form-item">
+            <label>大类</label>
+            <div class="combo-wrap">
+              <input id="category-combo-input" class="combo-input" placeholder="搜索大类 / 直接输入自定义大类" />
+              <div id="category-combo-dropdown" class="combo-dropdown hidden"></div>
+            </div>
+          </div>
+          <div class="form-item"><label>待办名称</label><input id="todo-title" placeholder="输入本次工作任务名称" /></div>
+          <div class="form-item">
+            <label>优先级</label>
+            <select id="todo-priority">
+              <option value="high">🔴 高优先级</option>
+              <option value="mid" selected>🟠 中优先级</option>
+              <option value="low">🟢 低优先级</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label>任务状态</label>
+            <select id="todo-status">
+              <option value="wait">⏸ 未开始</option>
+              <option value="doing">▶ 进行中</option>
+              <option value="finish">✅ 已完成</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label>备注信息</label>
+            <textarea id="todo-note" placeholder="填写工作简述，可基于备注生成工作汇报"></textarea>
+            <button id="btn-ai-note" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
+          </div>
+          <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 时间格式：XXXX/XX/XX XX:XX｜Alt+S 填充开始时间｜Alt+E 填充完成时间</div>
+          <div class="row">
+            <div class="form-item"><label>开始时间（选填）</label><input id="todo-start" placeholder="例如：2026/09/20 08:30" /></div>
+            <div class="form-item"><label>完成时间</label><input id="todo-end" placeholder="完成后填写" /></div>
+          </div>
+          <button id="btn-add-todo" class="btn-primary"><i class="fa-solid fa-plus"></i> 添加待办记录</button>
+          <button id="btn-gen-report" class="btn-purple"><i class="fa-solid fa-file-lines"></i> 生成日报文本</button>
+          <button id="btn-export" class="btn-teal"><i class="fa-solid fa-copy"></i> 导出当日记录</button>
+          <div id="ai-output" class="ai-result hidden"></div>
+          <hr class="divider" />
+          <div class="filter-bar">
+            <h3 style="margin-top:0"><i class="fa-solid fa-filter"></i> 任务筛选</h3>
+            <div class="row">
+              <div class="form-item">
+                <label>任务状态</label>
+                <select id="filter-status">
+                  <option value="">全部状态</option>
+                  <option value="wait">未开始</option>
+                  <option value="doing">进行中</option>
+                  <option value="finish">已完成</option>
+                </select>
+              </div>
+              <div class="form-item">
+                <label>大类筛选</label>
+                <select id="filter-category"><option value="">全部大类</option></select>
+              </div>
+            </div>
+            <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
+            <button id="btn-reset-filter" class="btn-gray"><i class="fa-solid fa-rotate-right"></i> 重置筛选</button>
+          </div>
+          <h2><i class="fa-solid fa-clipboard-list"></i> 当日明细记录</h2>
+          <div id="todo-list"></div>
+          <div class="summary-block">
+            <h2 style="margin-top:0"><i class="fa-solid fa-chart-simple"></i> 当日大类汇总统计</h2>
+            <div id="summary-list"></div>
+          </div>
+        </div>
+        <div id="tab-alltodo" class="hidden"><h2><i class="fa-solid fa-users-line"></i> 全员待办任务查看</h2><div id="all-todo-list"></div></div>
+        <div id="tab-category" class="hidden">
+          <h2><i class="fa-solid fa-folder-tree"></i> 大类管理</h2>
+          <div class="form-item"><label>新增大类名称</label><input id="new-category-name" placeholder="输入自定义大类名称，例如：测试工作" /></div>
+          <button id="btn-add-cat" class="btn-primary"><i class="fa-solid fa-plus"></i> 添加大类</button>
+          <div id="category-list"></div>
+        </div>
+        <div id="tab-info" class="hidden">
+          <h2><i class="fa-solid fa-key"></i> 修改密码</h2>
+          <div class="form-item"><label>原密码</label><input id="old-pwd" type="password" placeholder="输入原有密码" /></div>
+          <div class="form-item"><label>新密码</label><input id="new-pwd" type="password" placeholder="设置新密码" /></div>
+          <button id="btn-chg-pwd" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 确认修改</button>
+          <h2 id="backupTitle" style="margin-top:24px;display:none"><i class="fa-solid fa-database"></i> 数据备份与恢复</h2>
+          <div id="backupBlock" style="display:none">
+            <div class="tip-text" style="margin:0 0 10px 0">换电脑或清缓存前，先点导出备份保存JSON文件；新电脑打开后点导入备份，就能恢复所有账号、待办和邮箱配置。</div>
+            <button id="btn-export-backup" class="btn-teal"><i class="fa-solid fa-download"></i> 导出全部数据备份</button>
+            <button id="btn-import-backup" class="btn-primary"><i class="fa-solid fa-upload"></i> 导入备份恢复数据</button>
+            <button id="btn-gen-sync-code" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-key"></i> 生成配置同步码</button>
+            <input type="file" id="import-backup-file" accept=".json" style="display:none" />
+          </div>
+          <h2 id="mailConfigTitle" style="margin-top:24px;display:none"><i class="fa-solid fa-server"></i> 发件邮箱服务配置</h2>
+          <div id="mailConfigBlock" style="display:none">
+            <div class="form-item"><label>EmailJS Service ID</label><input id="emailjs-service-id" placeholder="在EmailJS官网配置邮箱服务后获取" /></div>
+            <div class="form-item"><label>EmailJS Template ID</label><input id="emailjs-template-id" placeholder="创建邮件模板后获取" /></div>
+            <div class="form-item"><label>EmailJS Public Key</label><input id="emailjs-public-key" placeholder="在账号设置中获取" /></div>
+            <button id="btn-save-mail-config" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存发件配置</button>
+            <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 免费额度每月200封，足够小团队使用。配置步骤：1. 去 emailjs.com 免费注册；2. 添加你的邮箱（163/QQ/Gmail都支持）作为邮件服务；3. 创建一个简单邮件模板；4. 把上面三个ID填到这里保存即可。</div>
+          </div>
+          <h2 id="aiConfigTitle" style="margin-top:24px;display:none"><i class="fa-solid fa-wand-magic-sparkles"></i> AI备注优化配置</h2>
+          <div id="aiConfigBlock" style="display:none">
+            <div class="form-item"><label>AI接口地址（兼容OpenAI格式）</label><input id="ai-base-url" placeholder="例如：https://api.siliconflow.cn/v1" /></div>
+            <div class="form-item"><label>AI API Key</label><input id="ai-api-key" type="password" placeholder="填写你申请的免费API Key" /></div>
+            <div class="form-item"><label>模型名称</label><input id="ai-model" placeholder="例如：Qwen/Qwen2.5-7B-Instruct" /></div>
+            <button id="btn-save-ai-config" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存AI配置</button>
+            <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 推荐用硅基流动免费额度：注册送14元，足够个人用几个月，地址填 https://api.siliconflow.cn/v1 ，模型选 Qwen2.5-7B 即可。</div>
+          </div>
+          <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
+          <div class="form-item"><label>邮箱地址</label><input id="user-email" placeholder="xxx@xxx.com" /></div>
+          <button id="btn-save-email" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
+          <div id="testMailBlock" style="display:none">
+            <button id="btn-test-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
+          </div>
+          <!-- ==========管理员专属：给成员发送邮件模块========== -->
+          <div id="adminMailBlock" class="admin-mail-send-block" style="display:none">
+            <h3><i class="fa-solid fa-envelope-circle-check"></i> 管理员：向成员发送测试邮件</h3>
+            <div class="form-item">
+              <label>选择成员</label>
+              <select id="selectMemberForMail"></select>
+            </div>
+            <div class="form-item">
+              <label>邮件内容</label>
+              <textarea id="adminMailContent" placeholder="填写要发送给成员的提醒内容">您好，这是逸想待办系统的测试提醒邮件，请查收您今日待办任务。</textarea>
+            </div>
+            <button id="btn-admin-send-member-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
+            <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
+          </div>
+        </div>
+        <div id="tab-member" class="hidden">
+          <h2><i class="fa-solid fa-user-plus"></i> 注册新成员</h2>
+          <div class="form-item"><label>成员账号（≥2个中文汉字）</label><input id="new-member-name" placeholder="例：李明、王浩宇、张三丰" /></div>
+          <div class="form-item"><label>初始密码</label><input id="new-member-pwd" placeholder="设置初始密码" /></div>
+          <div class="form-item"><label>邮箱地址（必填）</label><input id="new-member-email" placeholder="例如：liming@example.com" /></div>
+          <button id="btn-add-member" class="btn-primary"><i class="fa-solid fa-user-plus"></i> 添加成员</button>
+          <hr class="divider" />
+          <h3>成员列表与权限配置</h3>
+          <div id="member-list"></div>
+        </div>
+        <div id="tab-maillog" class="hidden"><h2><i class="fa-solid fa-envelope-open-text"></i> 邮件发送日志</h2><div id="mail-log-list"></div></div>
+      </div>
+    </div>
+  </div>
+<script>
+// 初始化数据
+const STORAGE_KEY = "yixiang_todo_data";
+let data;
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    data = JSON.parse(raw);
+  }else{
+    throw new Error("空");
+  }
+}catch(e){
+  data = {
+    users: [
+      {
+        username:"yinyifei",
+        pwd:"admin123",
+        isAdmin:true,
+        email:"",
+        permissions:{}
+      }
+    ],
+    categories:[],
+    todos:[],
+    mailLogs:[],
+    mailConfig:{
+      serviceId:"",
+      templateId:"",
+      publicKey:""
+    },
+    aiConfig:{
+      baseUrl:"",
+      apiKey:"",
+      model:""
+    },
+    cloudConfig:{
+      binId:"",
+      apiKey:""
+    }
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+//如果有硬编码的云端配置（共享版HTML），直接覆盖本地的云端配置
+if(window.HARDCODED_CLOUD){
+  if(!data.cloudConfig) data.cloudConfig = {};
+  data.cloudConfig.binId = window.HARDCODED_CLOUD.binId;
+  data.cloudConfig.apiKey = window.HARDCODED_CLOUD.apiKey;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  //如果配置了云端，自动同步到jsonbin
+  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
+    fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}`,{
+      method:"PUT",
+      headers:{
+        "Content-Type":"application/json",
+        "X-Master-Key": data.cloudConfig.apiKey
+      },
+      body: JSON.stringify(data)
+    }).catch(e=>console.log("云端同步失败:",e));
+  }
+}
+//从云端拉取最新数据
+async function fetchCloudData(){
+  if(!data.cloudConfig?.binId || !data.cloudConfig?.apiKey) return;
+  try{
+    const resp = await fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}/latest`,{
+      headers:{
+        "X-Master-Key": data.cloudConfig.apiKey
+      }
+    });
+    const result = await resp.json();
+    if(result.record){
+      data = result.record;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      console.log("云端数据同步成功");
+    }
+  }catch(e){
+    console.log("云端拉取失败:",e);
+  }
+}
+let currentUser = null;
+let filterStatusVal = "";
+let filterCatVal = "";
+//权限定义
+const PERM = {
+  viewAllTodo:"viewAllTodo",
+  manageCategory:"manageCategory",
+  manageMember:"manageMember",
+  viewMailLog:"viewMailLog",
+  sendMail:"sendMail"
+}
+const permLabel = {
+  viewAllTodo:"查看全员任务",
+  manageCategory:"大类管理",
+  manageMember:"成员管理",
+  viewMailLog:"查看邮件日志",
+  sendMail:"发送邮件提醒"
+}
+function getNowTimeStr(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  const h=String(d.getHours()).padStart(2,"0");
+  const min=String(d.getMinutes()).padStart(2,"0");
+  return `${y}/${m}/${day} ${h}:${min}`;
+}
+function hasPermission(permKey){
+  if(currentUser?.isAdmin) return true;
+  return !!currentUser?.permissions?.[permKey];
+}
+//全局事件委托
+document.addEventListener("click",function(e){
+  const target = e.target;
+  if(target.classList.contains("btn-del-member")){
+    const un = target.dataset.user;
+    if(confirm(`确认删除成员【${un}】？`)){
+      data.users = data.users.filter(u=>u.username!==un);
+      saveData();
+      renderMemberList();
+    }
+  }
+  if(target.classList.contains("btn-del-cat")){
+    const cname = target.dataset.catname;
+    if(confirm(`确认删除大类【${cname}】`)){
+      data.categories = data.categories.filter(c=>c.name!==cname);
+      saveData();
+      renderCategoryList();
+    }
+  }
+  if(target.classList.contains("tab")){
+    switchTab(target.dataset.tab);
+  }
+  //权限下拉展开/收起
+  if(target.classList.contains("perm-select-box")){
+    const wrap = target.closest(".perm-dropdown-wrap");
+    const drop = wrap.querySelector(".perm-dropdown");
+    drop.classList.toggle("hidden");
+  }
+  //点击空白关闭权限下拉
+  if(!target.closest(".perm-dropdown-wrap")){
+    document.querySelectorAll(".perm-dropdown").forEach(d=>d.classList.add("hidden"));
+  }
+})
+//权限复选框变更保存
+document.addEventListener("change",function(e){
+  const t = e.target;
+  if(t.classList.contains("perm-checkbox")){
+    const un = t.dataset.user;
+    const pk = t.dataset.perm;
+    saveUserPerm(un,pk,t.checked);
+    renderMemberList();
+  }
+})
+//快捷键
+document.addEventListener("keydown",e=>{
+  if(e.altKey && e.key.toLowerCase()==="s"){e.preventDefault();const el=document.getElementById("todo-start");if(el)el.value=getNowTimeStr();}
+  if(e.altKey && e.key.toLowerCase()==="e"){e.preventDefault();const el=document.getElementById("todo-end");if(el)el.value=getNowTimeStr();}
+  //登录回车登录
+  if(e.key === "Enter"){
+    const loginPage = document.getElementById("page-login");
+    if(!loginPage.classList.contains("hidden")){
+      login();
+    }
+  }
+})
+//【登录按钮绑定】
+const loginBtn = document.getElementById("login-btn");
+loginBtn.onclick = login;
+//大类搜索下拉
+document.getElementById("category-combo-input").oninput = function(){
+  const kw = this.value.trim();
+  renderCategoryDropdown(kw);
+}
+function renderCategoryDropdown(keyword){
+  const comboInput = document.getElementById("category-combo-input");
+  const comboDrop = document.getElementById("category-combo-dropdown");
+  comboDrop.classList.remove("hidden");
+  let list = data.categories.filter(x=>x.name.includes(keyword));
+  let html="";
+  list.forEach(c=>html +=`<div class="combo-item" data-catname="${c.name}">${c.name}</div>`)
+  if(list.length===0)html+=`<div class="combo-item">无匹配大类，直接输入创建新大类</div>`;
+  comboDrop.innerHTML=html;
+  document.querySelectorAll(".combo-item[data-catname]").forEach(el=>{
+    el.onclick=()=>{
+      comboInput.value = el.dataset.catname;
+      comboDrop.classList.add("hidden");
+    }
+  })
+}
+//保存AI配置
+document.getElementById("btn-save-ai-config").onclick = saveAIConfig;
+function saveAIConfig(){
+  if(!currentUser.isAdmin){alert("仅管理员可配置AI");return;}
+  const baseUrl = document.getElementById("ai-base-url").value.trim();
+  const apiKey = document.getElementById("ai-api-key").value.trim();
+  const model = document.getElementById("ai-model").value.trim();
+  if(!baseUrl || !apiKey || !model){
+    alert("请完整填写AI接口地址、API Key和模型名称");
+    return;
+  }
+  data.aiConfig = {baseUrl, apiKey, model};
+  saveData();
+  alert("✅AI配置保存成功，现在可以用AI优化备注了");
+}
+//AI
+async function aiImproveNote(){
+  const inp = document.getElementById("todo-note");
+  const txt = inp.value.trim();
+  if(!txt){alert("请输入备注草稿");return;}
+  if(!data.aiConfig?.baseUrl || !data.aiConfig?.apiKey || !data.aiConfig?.model){
+    alert("请管理员先在个人设置中配置AI接口");
+    return;
+  }
+  //按钮变加载状态
+  const btn = document.getElementById("btn-ai-note");
+  const oldText = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
+  btn.disabled = true;
+  try{
+    const resp = await fetch(`${data.aiConfig.baseUrl}/chat/completions`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${data.aiConfig.apiKey}`
+      },
+      body:JSON.stringify({
+        model: data.aiConfig.model,
+        messages:[
+          {role:"system", content:"你是一个工作备注优化助手，把用户输入的粗糙工作记录优化成专业、简洁、通顺的工作汇报风格，不要改变原意，不要加多余内容，直接输出优化后的文本。"},
+          {role:"user", content: txt}
+        ],
+        temperature: 0.3
+      })
+    });
+    const result = await resp.json();
+    if(result.choices && result.choices[0] && result.choices[0].message){
+      const optimized = result.choices[0].message.content.trim();
+      inp.value = optimized;
+      alert("✅AI备注优化完成");
+    }else{
+      alert("❌AI返回结果异常："+JSON.stringify(result));
+    }
+  }catch(e){
+    alert("❌调用AI失败："+e.message);
+  }finally{
+    btn.innerHTML = oldText;
+    btn.disabled = false;
+  }
+}
+async function generateReport(){
+  const title = document.getElementById("todo-title").value.trim();
+  const category = document.getElementById("category-combo-input").value.trim();
+  const priSel = document.getElementById("todo-priority");
+  const priText = priSel.value==="high"?"🔴高优先级":priSel.value==="mid"?"🟠中优先级":"🟢低优先级";
+  const note = document.getElementById("todo-note").value.trim();
+  const st = document.getElementById("todo-start").value.trim();
+  const et = document.getElementById("todo-end").value.trim();
+  let useMin = null;
+  if(st && et){
+    const t1=new Date(st),t2=new Date(et);
+    if(!isNaN(t1.getTime())&&!isNaN(t2.getTime())) useMin = Math.round((t2-t1)/60000);
+  }
+  if(!note){alert("备注不能为空");return;}
+  const res = `【${category}】${title}（${priText}）
+本次工作内容：${note}。
+工作执行时间段${st||"无起始时间记录"}至${et||"无结束时间记录"}，总耗时${useMin?useMin+"分钟":"暂未统计"}。该项工作已按要求落地完成，顺利达成本次任务目标。`;
+  const out = document.getElementById("ai-output");
+  out.innerText = res;out.classList.remove("hidden");
+}
+//登录逻辑
+function login(){
+  const un = document.getElementById("login-user").value.trim();
+  const pw = document.getElementById("login-pwd").value.trim();
+  const tip = document.getElementById("login-tip");
+  tip.innerText="";
+  if(!un||!pw){tip.innerText="账号密码不能为空";return;}
+  const user = data.users.find(u=>u.username===un && u.pwd===pw);
+  if(!user){tip.innerText="账号或密码错误";return;}
+  currentUser = user;
+  if(!currentUser.permissions) currentUser.permissions = {};
+  showMainPage();
+}
+//动态渲染顶部标签
+function renderTabs(){
+  const container = document.getElementById("tabBarContainer");
+  let tabHtml = `<div class="tab active" data-tab="todo"><i class="fa-solid fa-list-check"></i> 我的待办</div>`;
+  tabHtml += `<div class="tab" data-tab="info"><i class="fa-solid fa-user-gear"></i> 个人设置</div>`;
+  if(hasPermission(PERM.viewAllTodo)){
+    tabHtml += `<div class="tab" data-tab="alltodo"><i class="fa-solid fa-users-line"></i> 全员任务</div>`;
+  }
+  if(hasPermission(PERM.manageCategory)){
+    tabHtml += `<div class="tab" data-tab="category"><i class="fa-solid fa-folder-tree"></i> 大类管理</div>`;
+  }
+  if(hasPermission(PERM.manageMember)){
+    tabHtml += `<div class="tab" data-tab="member"><i class="fa-solid fa-users"></i> 成员管理</div>`;
+  }
+  if(hasPermission(PERM.viewMailLog)){
+    tabHtml += `<div class="tab" data-tab="maillog"><i class="fa-solid fa-envelope"></i> 邮件日志</div>`;
+  }
+  const logoutBtn = `<button id="logout-btn" class="btn-gray"><i class="fa-solid fa-right-from-bracket"></i> 退出登录</button>`
+  container.innerHTML = tabHtml + logoutBtn;
+  document.getElementById("logout-btn").onclick = logout;
+}
+function switchTab(tabName){
+  document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add("hidden"));
+  const tabDom = document.getElementById("tab-"+tabName);
+  if(!tabDom) return;
+  tabDom.classList.remove("hidden");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  const activeTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if(activeTab) activeTab.classList.add("active");
+  const permMap = {
+    alltodo:PERM.viewAllTodo,
+    category:PERM.manageCategory,
+    member:PERM.manageMember,
+    maillog:PERM.viewMailLog
+  }
+  if(permMap[tabName] && !hasPermission(permMap[tabName])){
+    alert("❌您没有权限访问该页面");
+    switchTab("todo");
+    return;
+  }
+  if(tabName==="category")renderCategoryList();
+  if(tabName==="member") renderMemberList();
+  if(tabName==="maillog")renderMailLog();
+  if(tabName==="todo")renderTodoList();
+  if(tabName==="alltodo") renderAllTodo();
+  //切换到个人设置tab，加载管理员邮件下拉
+  if(tabName === "info"){
+    //加载用户自己的邮箱
+    document.getElementById("user-email").value = currentUser.email || "";
+    //管理员专属模块
+    if(currentUser.isAdmin){
+      document.getElementById("adminMailBlock").style.display="block";
+      document.getElementById("mailConfigBlock").style.display="block";
+      document.getElementById("mailConfigTitle").style.display="block";
+      document.getElementById("backupBlock").style.display="block";
+      document.getElementById("backupTitle").style.display="block";
+      document.getElementById("aiConfigBlock").style.display="block";
+      document.getElementById("aiConfigTitle").style.display="block";
+      //加载已保存的发件配置
+      document.getElementById("emailjs-service-id").value = data.mailConfig?.serviceId || "";
+      document.getElementById("emailjs-template-id").value = data.mailConfig?.templateId || "";
+      document.getElementById("emailjs-public-key").value = data.mailConfig?.publicKey || "";
+      //加载已保存的AI配置
+      document.getElementById("ai-base-url").value = data.aiConfig?.baseUrl || "";
+      document.getElementById("ai-api-key").value = data.aiConfig?.apiKey || "";
+      document.getElementById("ai-model").value = data.aiConfig?.model || "";
+      renderAdminMailSelect();
+    }else{
+      document.getElementById("adminMailBlock").style.display="none";
+      document.getElementById("mailConfigBlock").style.display="none";
+      document.getElementById("mailConfigTitle").style.display="none";
+      document.getElementById("backupBlock").style.display="none";
+      document.getElementById("backupTitle").style.display="none";
+      document.getElementById("aiConfigBlock").style.display="none";
+      document.getElementById("aiConfigTitle").style.display="none";
+    }
+    //有发邮件权限的用户才显示测试邮件按钮
+    if(hasPermission(PERM.sendMail)){
+      document.getElementById("testMailBlock").style.display="block";
+    }else{
+      document.getElementById("testMailBlock").style.display="none";
+    }
+  }
+}
+//管理员发送邮件：加载成员下拉
+function renderAdminMailSelect(){
+  const sel = document.getElementById("selectMemberForMail");
+  sel.innerHTML = "";
+  const normalUsers = data.users.filter(u=>!u.isAdmin);
+  normalUsers.forEach(u=>{
+    sel.innerHTML += `<option value="${u.username}">${u.username}【邮箱：${u.email||"未绑定邮箱"}】</option>`
+  })
+  //选择成员后自动生成待办邮件内容
+  sel.onchange = function(){
+    const selectedUser = this.value;
+    if(!selectedUser) return;
+    //生成该成员的待办汇总
+    const userTodos = data.todos.filter(t=>t.assignTo === selectedUser);
+    const waitTodos = userTodos.filter(t=>t.status === "wait");
+    const doingTodos = userTodos.filter(t=>t.status === "doing");
+    const finishTodos = userTodos.filter(t=>t.status === "finish");
+    let mailContent = `您好 ${selectedUser}：\n\n您当前的待办任务汇总如下：\n\n`;
+    if(waitTodos.length > 0){
+      mailContent += `【未开始（${waitTodos.length}项）】\n`;
+      waitTodos.forEach((t,i)=>{
+        mailContent += `${i+1}. [${t.category}] ${t.title}（${t.priority==="high"?"高优先级":t.priority==="mid"?"中优先级":"低优先级"}）\n`;
+      });
+      mailContent += "\n";
+    }
+    if(doingTodos.length > 0){
+      mailContent += `【进行中（${doingTodos.length}项）】\n`;
+      doingTodos.forEach((t,i)=>{
+        mailContent += `${i+1}. [${t.category}] ${t.title}（${t.priority==="high"?"高优先级":t.priority==="mid"?"中优先级":"低优先级"}）\n`;
+      });
+      mailContent += "\n";
+    }
+    if(finishTodos.length > 0){
+      mailContent += `【已完成（${finishTodos.length}项）】\n`;
+      finishTodos.forEach((t,i)=>{
+        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
+      });
+      mailContent += "\n";
+    }
+    if(userTodos.length === 0){
+      mailContent += "您当前暂无待办任务。\n\n";
+    }
+    mailContent += "请及时跟进未完成任务，如有问题请联系管理员。\n—— 逸想待办系统自动发送";
+    document.getElementById("adminMailContent").value = mailContent;
+  };
+}
+function showMainPage(){
+  document.getElementById("page-login").classList.add("hidden");
+  document.getElementById("page-main").classList.remove("hidden");
+  document.getElementById("user-info").style.display="flex";
+  document.getElementById("user-name").innerText = currentUser.username;
+  document.getElementById("user-avatar").innerText = currentUser.username.charAt(0);
+  //如果已保存EmailJS配置，自动初始化
+  if(data.mailConfig?.publicKey){
+    emailjs.init(data.mailConfig.publicKey);
+  }
+  renderTabs();
+  if(currentUser.isAdmin){
+    document.getElementById("assign-wrap").style.display="block";
+    renderMemberList();
+    const sel = document.getElementById("assign-user");
+    sel.innerHTML = `<option value="">给自己</option><option value="__all__">全部普通成员</option>`;
+    data.users.filter(u=>!u.isAdmin).forEach(m=>sel.innerHTML += `<option value="${m.username}">${m.username}</option>`)
+  }else{
+    document.getElementById("assign-wrap").style.display="none";
+  }
+  renderCategoryList();
+  renderTodoList();
+}
+function logout(){
+  currentUser=null;
+  document.getElementById("page-main").classList.add("hidden");
+  document.getElementById("page-login").classList.remove("hidden");
+  document.getElementById("login-user").value="";
+  document.getElementById("login-pwd").value="";
+}
+//新增待办
+document.getElementById("btn-add-todo").onclick = addTodo;
+function addTodo(){
+  const title = document.getElementById("todo-title").value.trim();
+  const category = document.getElementById("category-combo-input").value.trim();
+  const priority = document.getElementById("todo-priority").value;
+  const status = document.getElementById("todo-status").value;
+  const note = document.getElementById("todo-note").value.trim();
+  const st = document.getElementById("todo-start").value.trim();
+  const et = document.getElementById("todo-end").value.trim();
+  let useMin = null;
+  const assignTarget = document.getElementById("assign-user")?.value || "";
+  if(st && et){
+    const t1=new Date(st.replace(/\//g, "-")),t2=new Date(et.replace(/\//g, "-"));
+    if(t2<t1){alert("完成时间不能早于开始时间");return;}
+    if(!isNaN(t1.getTime())&&!isNaN(t2.getTime())) useMin = Math.round((t2-t1)/60000);
+  }
+  if(!title){alert("待办名称不能为空");return;}
+  if(!category){alert("大类不能为空");return;}
+  if(!data.categories.find(c=>c.name===category)){
+    data.categories.push({name:category});
+  }
+  //编辑模式
+  if(window._editingTodoId){
+    const todo = data.todos.find(t=>t.id === window._editingTodoId);
+    if(todo){
+      todo.title = title;
+      todo.category = category;
+      todo.priority = priority;
+      todo.status = status;
+      todo.note = note;
+      todo.startTime = st;
+      todo.endTime = et;
+      todo.useMin = useMin;
+      saveData();
+      alert("✅待办修改已保存");
+      //重置回新增模式
+      window._editingTodoId = null;
+      document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-plus"></i> 添加待办记录';
+      //清空表单
+      document.getElementById("todo-title").value = "";
+      document.getElementById("todo-note").value = "";
+      document.getElementById("todo-start").value = "";
+      document.getElementById("todo-end").value = "";
+      renderTodoList();
+      return;
+    }
+  }
+  if(currentUser.isAdmin && assignTarget === "__all__"){
+    const members = data.users.filter(u=>!u.isAdmin);
+    members.forEach(m=>{
+      data.todos.push({
+        id:Date.now()+Math.random(),
+        createUser:currentUser.username,
+        assignTo:m.username,
+        title,category,priority,status,note,startTime:st,endTime:et,useMin
+      })
+    })
+    saveData();
+    alert("✅任务批量下发全部普通成员");
+    renderTodoList();
+    return;
+  }
+  const assignTo = (currentUser.isAdmin && assignTarget && assignTarget !== "") ? assignTarget : currentUser.username;
+  data.todos.push({
+    id:Date.now()+Math.random(),
+    createUser:currentUser.username,
+    assignTo:assignTo,
+    title,category,priority,status,note,startTime:st,endTime:et,useMin
+  })
+  saveData();
+  alert(`新增待办【${title}】`);
+  //清空表单
+  document.getElementById("todo-title").value = "";
+  document.getElementById("todo-note").value = "";
+  document.getElementById("todo-start").value = "";
+  document.getElementById("todo-end").value = "";
+  renderTodoList();
+}
+document.getElementById("btn-filter").onclick = reloadFilterTodo;
+document.getElementById("btn-reset-filter").onclick = resetFilter;
+function reloadFilterTodo(){
+  filterStatusVal = document.getElementById("filter-status").value;
+  filterCatVal = document.getElementById("filter-category").value;
+  renderTodoList();
+}
+function resetFilter(){filterStatusVal="";filterCatVal="";renderTodoList();}
+function renderTodoList(){
+  const wrap = document.getElementById("todo-list");
+  const summaryWrap = document.getElementById("summary-list");
+  const filterCatSelect = document.getElementById("filter-category");
+  filterCatSelect.innerHTML = `<option value="">全部大类</option>`;
+  data.categories.forEach(c=>filterCatSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`)
+  let list = data.todos;
+  if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)){
+    list = data.todos.filter(item=> item.assignTo === currentUser.username)
+  }
+  if(filterStatusVal) list = list.filter(x=>x.status===filterStatusVal);
+  if(filterCatVal) list = list.filter(x=>x.category===filterCatVal);
+
+  //计算统计数据
+  const now = new Date();
+  const totalCount = list.length;
+  const finishCount = list.filter(x=>x.status==="finish").length;
+  const doingCount = list.filter(x=>x.status==="doing" || x.status==="wait").length;
+  //逾期：有完成时间，且完成时间早于现在，且状态不是已完成
+  const overdueCount = list.filter(x=>{
+    if(x.status === "finish" || !x.endTime) return false;
+    const endTime = new Date(x.endTime.replace(/\//g, "-"));
+    return !isNaN(endTime.getTime()) && endTime < now;
+  }).length;
+
+  let html="";
+  //统计卡片
+  html += `<div class="stat-row">
+    <div class="stat-card stat-total"><div class="label">总任务数</div><div class="num">${totalCount}</div></div>
+    <div class="stat-card stat-doing"><div class="label">待处理</div><div class="num">${doingCount}</div></div>
+    <div class="stat-card stat-finish"><div class="label">已完成</div><div class="num">${finishCount}</div></div>
+    <div class="stat-card stat-overdue"><div class="label">已逾期</div><div class="num">${overdueCount}</div></div>
+  </div>`;
+
+  list.forEach(item=>{
+    const priHtml = item.priority==="high"
+      ?'<span class="priority-high"><i class="fa-solid fa-circle-up"></i> 🔴 高优先级</span>'
+      :item.priority==="mid"
+      ?'<span class="priority-mid"><i class="fa-solid fa-circle-minus"></i> 🟠 中优先级</span>'
+      :'<span class="priority-low"><i class="fa-solid fa-circle-down"></i> 🟢 低优先级</span>';
+    let statusHtml="";
+    if(item.status==="wait") statusHtml = '<span class="status-wait"><i class="fa-solid fa-pause"></i> 未开始</span>';
+    if(item.status==="doing") statusHtml = '<span class="status-doing"><i class="fa-solid fa-play"></i> 进行中</span>';
+    if(item.status==="finish") statusHtml = '<span class="status-finish"><i class="fa-solid fa-check"></i> 已完成</span>';
+    //判断是否逾期
+    let isOverdue = false;
+    if(item.status !== "finish" && item.endTime){
+      const endTime = new Date(item.endTime.replace(/\//g, "-"));
+      if(!isNaN(endTime.getTime()) && endTime < now) isOverdue = true;
+    }
+    html += `
+    <div class="todo-item ${isOverdue?'overdue':''}">
+      <div class="todo-title">
+        <strong>${item.title}</strong>${priHtml}${statusHtml}
+        <span class="category-tag"><i class="fa-solid fa-tag"></i> ${item.category}</span>
+        <span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${item.assignTo}</span>
+      </div>
+      <div style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${item.note || ""}</div>
+      <div class="meta-row">
+        <span><i class="fa-regular fa-clock"></i> 开始：${item.startTime||"-"}</span>
+        <span><i class="fa-regular fa-clock"></i> 完成：${item.endTime||"-"}</span>
+        <span><i class="fa-solid fa-hourglass-half"></i> 用时：${item.useMin ? item.useMin+"分钟":"-"}</span>
+      </div>
+      <div class="todo-actions">
+        <button class="btn-gray btn-edit-todo" data-id="${item.id}"><i class="fa-solid fa-pen"></i> 编辑</button>
+        <button class="btn-danger btn-del-todo" data-id="${item.id}"><i class="fa-solid fa-trash"></i> 删除</button>
+      </div>
+    </div>`
+  })
+  wrap.innerHTML = html || "<div>暂无待办</div>";
+
+  //大类汇总
+  const group = {};
+  list.forEach(t=>{
+    if(!group[t.category]) group[t.category] = {count:0,totalMin:0,items:[]};
+    group[t.category].count++;
+    if(t.useMin) group[t.category].totalMin += t.useMin;
+    group[t.category].items.push(t);
+  })
+  let sumHtml="";
+  Object.keys(group).forEach(cat=>{
+    sumHtml += `<div class="summary-group"><strong>${cat}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟</div>`
+  })
+  summaryWrap.innerHTML = sumHtml || "<div>暂无数据汇总</div>";
+}
+
+//删除待办
+document.addEventListener("click",function(e){
+  if(e.target.classList.contains("btn-del-todo")){
+    const id = parseFloat(e.target.dataset.id);
+    if(!confirm("确认删除这个待办？")) return;
+    data.todos = data.todos.filter(t=>t.id !== id);
+    saveData();
+    renderTodoList();
+    alert("✅待办已删除");
+  }
+  if(e.target.classList.contains("btn-edit-todo")){
+    const id = parseFloat(e.target.dataset.id);
+    const todo = data.todos.find(t=>t.id === id);
+    if(!todo) return;
+    //把待办内容填充到上面的新增表单里，改成编辑模式
+    document.getElementById("todo-title").value = todo.title;
+    document.getElementById("category-combo-input").value = todo.category;
+    document.getElementById("todo-priority").value = todo.priority;
+    document.getElementById("todo-status").value = todo.status;
+    document.getElementById("todo-note").value = todo.note || "";
+    document.getElementById("todo-start").value = todo.startTime || "";
+    document.getElementById("todo-end").value = todo.endTime || "";
+    //把当前编辑的待办id存下来，点添加的时候改成更新
+    window._editingTodoId = id;
+    document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 保存修改';
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+})
+function renderAllTodo(){
+  const wrap = document.getElementById("all-todo-list");
+  if(!hasPermission(PERM.viewAllTodo)){wrap.innerHTML="无权限";return;}
+  let html="";
+  data.todos.forEach(item=>{
+    html += `<div class="todo-item">
+      <div class="todo-title"><strong>${item.title}</strong><span class="category-tag">${item.category}</span><span>指派给:${item.assignTo}</span></div>
+      <div>备注：${item.note||""}</div>
+    </div>`
+  })
+  wrap.innerHTML = html || "暂无全员任务";
+}
+document.getElementById("btn-add-cat").onclick = addCategory;
+function addCategory(){
+  if(!hasPermission(PERM.manageCategory)){alert("无权限");return;}
+  const name = document.getElementById("new-category-name").value.trim();
+  if(!name){alert("大类名称不能为空");return;}
+  if(data.categories.find(c=>c.name===name)){alert("大类已存在");return;}
+  data.categories.push({name});
+  saveData();
+  renderCategoryList();
+  document.getElementById("new-category-name").value="";
+}
+function renderCategoryList(){
+  const wrap = document.getElementById("category-list");
+  let html="";
+  data.categories.forEach(c=>{
+    html += `<div class="category-block"><span>${c.name}</span>${hasPermission(PERM.manageCategory)?`<button class="btn-danger btn-del-cat" data-catname="${c.name}">删除</button>`:""}</div>`
+  })
+  wrap.innerHTML = html;
+}
+//成员列表，权限改为下拉多选
+function renderMemberList(){
+  const wrap = document.getElementById("member-list");
+  let html="";
+  data.users.forEach(u=>{
+    let permHtml = "";
+    if(!u.isAdmin){
+      //已选中权限标签
+      const selectedPerms = Object.entries(u.permissions).filter(([k,v])=>v).map(([k])=>permLabel[k]);
+      const tagHtml = selectedPerms.map(p=>`<span class="perm-tag">${p}</span>`).join("");
+      const displayText = selectedPerms.length>0 ? tagHtml : "点击选择权限";
+      permHtml += `
+      <div class="perm-dropdown-wrap">
+        <div class="perm-select-box">
+          <div>${displayText}</div>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="perm-dropdown hidden">
+        ${Object.entries(PERM).map(([key,pKey])=>{
+          const checked = u.permissions?.[pKey] ? "checked" : "";
+          return `<div class="perm-item">
+            <input type="checkbox" class="perm-checkbox" data-user="${u.username}" data-perm="${pKey}" ${checked}>
+            <label>${permLabel[pKey]}</label>
+          </div>`
+        }).join("")}
+        </div>
+      </div>`;
+    }
+    html += `<div class="category-block" style="flex-direction:column;align-items:flex-start">
+      <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+        <span>账号：${u.username} ${u.isAdmin?"【管理员】":"【普通成员】"}</span>
+        <div>
+          ${!u.isAdmin?`<button class="btn-danger btn-del-member" data-user="${u.username}">删除成员</button>`:""}
+        </div>
+      </div>
+      ${permHtml}
+    </div>`
+  })
+  wrap.innerHTML = html;
+}
+function saveUserPerm(username, permKey, val){
+  const user = data.users.find(x=>x.username === username);
+  if(!user.permissions) user.permissions = {};
+  user.permissions[permKey] = val;
+  saveData();
+}
+function renderMailLog(){
+  const wrap = document.getElementById("mail-log-list");
+  let html="";
+  data.mailLogs.forEach(log=>{
+    html += `<div class="log-item">【${log.time}】收件：${log.to}｜状态：${log.status}｜消息：${log.msg}</div>`
+  })
+  wrap.innerHTML = html || "暂无邮件日志";
+}
+document.getElementById("btn-add-member").onclick = addMember;
+function addMember(){
+  const un = document.getElementById("new-member-name").value.trim();
+  const pw = document.getElementById("new-member-pwd").value.trim();
+  const email = document.getElementById("new-member-email").value.trim();
+  const regChinese = /^[\u4e00-\u9fa5]{2,}$/;
+  const regEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!regChinese.test(un)){
+    alert("成员账号必须为**至少2个中文汉字**，仅支持汉字（示例：李明、王浩宇）");
+    return;
+  }
+  if(!pw){alert("请填写成员初始密码");return;}
+  if(!email){alert("请填写成员邮箱地址（必填）");return;}
+  if(!regEmail.test(email)){alert("邮箱格式不正确，请输入有效的邮箱地址（例如：name@example.com）");return;}
+  if(data.users.find(u=>u.username === un)){
+    alert("该账号已存在");return;
+  }
+  data.users.push({
+    username:un,
+    pwd:pw,
+    isAdmin:false,
+    email:email,
+    permissions:{}
+  });
+  saveData();
+  alert(`✅成员【${un}】创建成功，已绑定邮箱：${email}`);
+  renderMemberList();
+  document.getElementById("new-member-name").value="";
+  document.getElementById("new-member-pwd").value="";
+  document.getElementById("new-member-email").value="";
+}
+document.getElementById("btn-chg-pwd").onclick = changePassword;
+function changePassword(){
+  const oldPwd = document.getElementById("old-pwd").value.trim();
+  const newPwd = document.getElementById("new-pwd").value.trim();
+  if(currentUser.pwd !== oldPwd){alert("原密码错误");return;}
+  if(!newPwd){alert("新密码不能为空");return;}
+  currentUser.pwd = newPwd;
+  const userObj = data.users.find(u=>u.username === currentUser.username);
+  userObj.pwd = newPwd;
+  saveData();
+  alert("密码修改成功");
+  document.getElementById("old-pwd").value="";
+  document.getElementById("new-pwd").value="";
+}
+document.getElementById("btn-save-email").onclick = saveEmail;
+function saveEmail(){
+  const email = document.getElementById("user-email").value.trim();
+  currentUser.email = email;
+  const userObj = data.users.find(u=>u.username === currentUser.username);
+  userObj.email = email;
+  saveData();
+  alert("邮箱保存成功");
+}
+//保存发件邮箱配置
+document.getElementById("btn-save-mail-config").onclick = saveMailConfig;
+function saveMailConfig(){
+  if(!currentUser.isAdmin){alert("仅管理员可配置发件服务");return;}
+  const serviceId = document.getElementById("emailjs-service-id").value.trim();
+  const templateId = document.getElementById("emailjs-template-id").value.trim();
+  const publicKey = document.getElementById("emailjs-public-key").value.trim();
+  if(!serviceId || !templateId || !publicKey){
+    alert("请完整填写EmailJS的Service ID、Template ID和Public Key");
+    return;
+  }
+  data.mailConfig = {serviceId, templateId, publicKey};
+  //初始化EmailJS
+  emailjs.init(publicKey);
+  saveData();
+  alert("✅发件邮箱配置保存成功，现在可以直接从网页发送邮件了");
+}
+//统一发邮件函数
+async function sendMail(receiverEmail, subject, textContent){
+  if(!data.mailConfig?.serviceId || !data.mailConfig?.templateId || !data.mailConfig?.publicKey){
+    throw new Error("请管理员先在个人设置中配置EmailJS发件服务");
+  }
+  //初始化EmailJS
+  emailjs.init(data.mailConfig.publicKey);
+  //发送邮件，模板参数需要和EmailJS里的模板变量对应
+  return emailjs.send(
+    data.mailConfig.serviceId,
+    data.mailConfig.templateId,
+    {
+      to_email: receiverEmail,
+      subject: subject,
+      message: textContent,
+      from_name: "逸想待办系统"
+    }
+  );
+}
+//导出全部数据备份
+document.getElementById("btn-export-backup").onclick = exportBackup;
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
+  a.href = url;
+  a.download = `逸想待办备份_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("✅备份文件已下载，换电脑时导入这个文件即可恢复所有数据");
+}
+//生成配置同步码（只包含邮箱和AI配置，不包含账号密码）
+document.getElementById("btn-gen-sync-code").onclick = genSyncCode;
+function genSyncCode(){
+  const syncData = {
+    mailConfig: data.mailConfig,
+    aiConfig: data.aiConfig
+  };
+  const jsonStr = JSON.stringify(syncData);
+  const syncCode = btoa(unescape(encodeURIComponent(jsonStr)));
+  prompt("复制下面这段同步码，换电脑时在登录页粘贴即可自动恢复邮箱和AI配置：", syncCode);
+}
+//应用同步码
+document.getElementById("btn-apply-sync-code").onclick = applySyncCode;
+function applySyncCode(){
+  const code = document.getElementById("sync-code-input").value.trim();
+  if(!code){alert("请先粘贴同步码");return;}
+  try{
+    const jsonStr = decodeURIComponent(escape(atob(code)));
+    const syncData = JSON.parse(jsonStr);
+    if(syncData.mailConfig) data.mailConfig = syncData.mailConfig;
+    if(syncData.aiConfig) data.aiConfig = syncData.aiConfig;
+    saveData();
+    alert("✅配置同步成功！邮箱和AI配置已恢复，现在可以登录了");
+    document.getElementById("sync-code-input").value = "";
+  }catch(e){
+    alert("❌同步码格式错误，请检查后重试");
+  }
+}
+//导入备份
+document.getElementById("btn-import-backup").onclick = ()=>{
+  document.getElementById("import-backup-file").click();
+};
+document.getElementById("import-backup-file").onchange = function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const importData = JSON.parse(ev.target.result);
+      if(!importData.users || !importData.categories){
+        alert("❌备份文件格式不正确，请选择正确的逸想待办备份文件");
+        return;
+      }
+      if(!confirm("⚠️导入备份会覆盖当前所有数据，确认继续吗？")) return;
+      data = importData;
+      if(!data.mailConfig) data.mailConfig = {serviceId:"", templateId:"", publicKey:""};
+      if(!data.mailLogs) data.mailLogs = [];
+      saveData();
+      alert("✅备份导入成功，页面即将刷新");
+      setTimeout(()=>location.reload(), 1000);
+    }catch(err){
+      alert("❌备份文件解析失败："+err.message);
+    }
+  };
+  reader.readAsText(file);
+};
+//给自己发测试邮件
+document.getElementById("btn-test-mail").onclick = testMail;
+async function testMail(){
+  if(!hasPermission(PERM.sendMail)) return;
+  const receiverEmail = currentUser.email;
+  if(!receiverEmail){alert("请先在上方填写并保存你的收件邮箱！");return;}
+  try{
+    await sendMail(receiverEmail, "逸想待办 - 测试提醒邮件", "这是逸想待办系统发送的测试邮件，邮件功能正常。");
+    alert("✅邮件发送成功！");
+    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"success",msg:"个人测试邮件发送成功"});
+    saveData();
+    renderMailLog();
+  }catch(e){
+    alert("❌发送失败："+e.message);
+    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"fail",msg:"发送失败："+e.message});
+    saveData();
+    renderMailLog();
+  }
+}
+// ==========【新增】管理员：给选中成员发送邮件 ==========
+document.getElementById("btn-admin-send-member-mail").onclick = adminSendMemberMail;
+async function adminSendMemberMail(){
+  const selectedUserName = document.getElementById("selectMemberForMail").value;
+  const targetUser = data.users.find(u=>u.username === selectedUserName);
+  if(!targetUser){alert("找不到该成员");return;}
+  if(!targetUser.email){alert("该成员尚未绑定邮箱，无法发送邮件");return;}
+  const mailContent = document.getElementById("adminMailContent").value.trim();
+  if(!mailContent){alert("邮件内容不能为空");return;}
+  const receiverEmail = targetUser.email;
+  try{
+    await sendMail(receiverEmail, "逸想待办 - 管理员发送提醒", mailContent);
+    alert(`✅邮件成功发送给成员【${targetUser.username}】`);
+    data.mailLogs.push({
+      time:getNowTimeStr(),
+      to:receiverEmail,
+      status:"success",
+      msg:`管理员${currentUser.username}向成员${targetUser.username}发送邮件`
+    });
+    saveData();
+    renderMailLog();
+  }catch(e){
+    alert(`❌发送失败：${e.message}`);
+    data.mailLogs.push({
+      time:getNowTimeStr(),
+      to:receiverEmail,
+      status:"fail",
+      msg:`管理员${currentUser.username}发送给${targetUser.username}失败，原因：${e.message}`
+    });
+    saveData();
+    renderMailLog();
+  }
+}
+//一键批量提醒所有有未完成任务的成员
+document.getElementById("btn-batch-remind").onclick = batchRemind;
+async function batchRemind(){
+  const members = data.users.filter(u=>!u.isAdmin && u.email);
+  if(members.length === 0){alert("没有绑定邮箱的成员");return;}
+  if(!confirm("确认要给所有有未完成任务的成员批量发送提醒邮件吗？")) return;
+  let successCount = 0;
+  let failCount = 0;
+  let skipCount = 0;
+  for(const member of members){
+    const memberTodos = data.todos.filter(t=>t.assignTo === member.username);
+    const unfinishedTodos = memberTodos.filter(t=>t.status !== "finish");
+    if(unfinishedTodos.length === 0){
+      skipCount++;
+      continue;
+    }
+    //生成邮件内容
+    const waitTodos = unfinishedTodos.filter(t=>t.status === "wait");
+    const doingTodos = unfinishedTodos.filter(t=>t.status === "doing");
+    let mailContent = `您好 ${member.username}：\n\n您有${unfinishedTodos.length}项未完成的待办任务，请及时处理：\n\n`;
+    if(waitTodos.length > 0){
+      mailContent += `【未开始（${waitTodos.length}项）】\n`;
+      waitTodos.forEach((t,i)=>{
+        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
+      });
+      mailContent += "\n";
+    }
+    if(doingTodos.length > 0){
+      mailContent += `【进行中（${doingTodos.length}项）】\n`;
+      doingTodos.forEach((t,i)=>{
+        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
+      });
+      mailContent += "\n";
+    }
+    mailContent += "请尽快跟进，逾期任务会自动标红提醒。\n—— 逸想待办系统自动发送";
+    try{
+      await sendMail(member.email, "逸想待办 - 待办任务提醒", mailContent);
+      successCount++;
+      data.mailLogs.push({
+        time:getNowTimeStr(),
+        to:member.email,
+        status:"success",
+        msg:`批量提醒发送给${member.username}，未完成任务${unfinishedTodos.length}项`
+      });
+    }catch(e){
+      failCount++;
+      data.mailLogs.push({
+        time:getNowTimeStr(),
+        to:member.email,
+        status:"fail",
+        msg:`批量提醒发送给${member.username}失败：${e.message}`
+      });
+    }
+  }
+  saveData();
+  renderMailLog();
+  alert(`✅批量提醒完成\n成功发送：${successCount}人\n无待办跳过：${skipCount}人\n发送失败：${failCount}人`);
+}
+document.getElementById("btn-ai-note").onclick = aiImproveNote;
+document.getElementById("btn-gen-report").onclick = generateReport;
+document.getElementById("btn-export").onclick = exportData;
+function exportData(){
+  let list = data.todos;
+  if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)) {
+    list = data.todos.filter(t=> t.assignTo === currentUser.username);
+  }
+  const group = {};
+  list.forEach(t=>{
+    if(!group[t.category]) group[t.category] = {count:0,totalMin:0,items:[]};
+    group[t.category].count++;
+    if(t.useMin) group[t.category].totalMin += t.useMin;
+    group[t.category].items.push(t);
+  })
+  let txt = "逸想待办-导出记录\n====================\n";
+  Object.keys(group).forEach(cat=>{
+    txt += `【大类：${cat}】任务总数：${group[cat].count}，总耗时：${group[cat].totalMin}分钟\n`;
+    group[cat].items.forEach(it=>{
+      txt += `·${it.title}｜${it.priority==="high"?"高优先级":it.priority==="mid"?"中优先级":"低优先级"}｜状态:${it.status}\n备注：${it.note}\n开始:${it.startTime} 完成:${it.endTime} 用时:${it.useMin??"-"}分钟\n\n`
+    })
+  })
+  const blob = new Blob([txt],{type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "逸想待办_任务汇总.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+//页面加载时，如果配置了云端，自动静默拉取最新数据（不自动刷新，避免死循环）
+window.onload = async function(){
+  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
+    //加个标记，避免循环刷新
+    if(sessionStorage.getItem("_justSynced") === "1"){
+      sessionStorage.removeItem("_justSynced");
+      return;
+    }
+    console.log("正在从云端同步最新数据...");
+    const oldUserCount = data.users.length;
+    await fetchCloudData();
+    //如果拉取后成员数量变了，才刷新一次
+    if(data.users.length !== oldUserCount){
+      sessionStorage.setItem("_justSynced", "1");
+      location.reload();
+    }
+  }
+}
+</script>
+</body>
+</html>
