@@ -249,7 +249,7 @@
           <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
           <div class="form-item"><label>邮箱地址</label><input id="user-email" placeholder="xxx@xxx.com" /></div>
           <button id="btn-save-email" class="btn-primary" onclick="saveEmail()"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
-          <div id="testMailBlock" style="display:none">
+          <div id="testMailBlock">
             <button id="btn-test-mail" class="btn-success" onclick="testMail()"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
           </div>
           <!-- ==========管理员专属：给成员发送邮件模块========== -->
@@ -729,6 +729,10 @@ function showMainPage(){
   }
   renderCategoryList();
   renderTodoList();
+  //自动加载管理员发邮件的成员下拉列表
+  if(currentUser.isAdmin){
+    renderAdminMailSelect();
+  }
 }
 function logout(){
   currentUser=null;
@@ -1051,6 +1055,7 @@ function addMember(){
   saveData();
   alert(`✅成员【${un}】创建成功，已绑定邮箱：${email}`);
   renderMemberList();
+  renderAdminMailSelect();
   document.getElementById("new-member-name").value="";
   document.getElementById("new-member-pwd").value="";
   document.getElementById("new-member-email").value="";
