@@ -348,9 +348,10 @@ function saveData(){
 async function fetchCloudData(){
   if(!data.cloudConfig?.binId || !data.cloudConfig?.apiKey) return;
   try{
-    const resp = await fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}/latest`,{
+    const resp = await fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}/latest?t=${Date.now()}`,{
       headers:{
-        "X-Master-Key": data.cloudConfig.apiKey
+        "X-Master-Key": data.cloudConfig.apiKey,
+        "Cache-Control": "no-cache"
       }
     });
     const result = await resp.json();
