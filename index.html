@@ -1335,19 +1335,9 @@ function exportData(){
 //页面加载时，如果配置了云端，自动静默拉取最新数据（不自动刷新，避免死循环）
 window.onload = async function(){
   if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
-    //加个标记，避免循环刷新
-    if(sessionStorage.getItem("_justSynced") === "1"){
-      sessionStorage.removeItem("_justSynced");
-    } else {
-      console.log("正在从云端同步最新数据...");
-      const oldUserCount = data.users.length;
-      await fetchCloudData();
-      //如果拉取后成员数量变了，才刷新一次
-      if(data.users.length !== oldUserCount){
-        sessionStorage.setItem("_justSynced", "1");
-        location.reload();
-      }
-    }
+    //每次打开页面强制拉取云端最新数据，保证所有设备立刻同步新成员/待办
+    console.log("正在从云端同步最新数据...");
+    await fetchCloudData();
   }
   //强制硬编码配置，不被旧数据覆盖
   data.mailConfig = {
