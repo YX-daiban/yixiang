@@ -565,7 +565,11 @@ async function generateReport(){
   out.innerText = res;out.classList.remove("hidden");
 }
 //登录逻辑
-function login(){
+async function login(){
+  //登录前强制拉取最新云端数据，确保新注册的成员能登录
+  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
+    await fetchCloudData();
+  }
   const un = document.getElementById("login-user").value.trim();
   const pw = document.getElementById("login-pwd").value.trim();
   const tip = document.getElementById("login-tip");
