@@ -187,7 +187,7 @@
           <div class="form-item">
             <label>备注信息</label>
             <textarea id="todo-note" placeholder="填写工作简述，可基于备注生成工作汇报"></textarea>
-            <button id="btn-ai-note" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
+            <button id="btn-ai-note" class="btn-purple" style="margin-top:10px" onclick="aiImproveNote()"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
           </div>
           <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 时间格式：XXXX/XX/XX XX:XX｜Alt+S 填充开始时间｜Alt+E 填充完成时间</div>
           <div class="row">
@@ -246,27 +246,11 @@
             <button id="btn-gen-sync-code" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-key"></i> 生成配置同步码</button>
             <input type="file" id="import-backup-file" accept=".json" style="display:none" />
           </div>
-          <h2 id="mailConfigTitle" style="margin-top:24px;display:none"><i class="fa-solid fa-server"></i> 发件邮箱服务配置</h2>
-          <div id="mailConfigBlock" style="display:none">
-            <div class="form-item"><label>EmailJS Service ID</label><input id="emailjs-service-id" placeholder="在EmailJS官网配置邮箱服务后获取" /></div>
-            <div class="form-item"><label>EmailJS Template ID</label><input id="emailjs-template-id" placeholder="创建邮件模板后获取" /></div>
-            <div class="form-item"><label>EmailJS Public Key</label><input id="emailjs-public-key" placeholder="在账号设置中获取" /></div>
-            <button id="btn-save-mail-config" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存发件配置</button>
-            <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 免费额度每月200封，足够小团队使用。配置步骤：1. 去 emailjs.com 免费注册；2. 添加你的邮箱（163/QQ/Gmail都支持）作为邮件服务；3. 创建一个简单邮件模板；4. 把上面三个ID填到这里保存即可。</div>
-          </div>
-          <h2 id="aiConfigTitle" style="margin-top:24px;display:none"><i class="fa-solid fa-wand-magic-sparkles"></i> AI备注优化配置</h2>
-          <div id="aiConfigBlock" style="display:none">
-            <div class="form-item"><label>AI接口地址（兼容OpenAI格式）</label><input id="ai-base-url" placeholder="例如：https://api.siliconflow.cn/v1" /></div>
-            <div class="form-item"><label>AI API Key</label><input id="ai-api-key" type="password" placeholder="填写你申请的免费API Key" /></div>
-            <div class="form-item"><label>模型名称</label><input id="ai-model" placeholder="例如：Qwen/Qwen2.5-7B-Instruct" /></div>
-            <button id="btn-save-ai-config" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存AI配置</button>
-            <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 推荐用硅基流动免费额度：注册送14元，足够个人用几个月，地址填 https://api.siliconflow.cn/v1 ，模型选 Qwen2.5-7B 即可。</div>
-          </div>
           <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
           <div class="form-item"><label>邮箱地址</label><input id="user-email" placeholder="xxx@xxx.com" /></div>
           <button id="btn-save-email" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
           <div id="testMailBlock" style="display:none">
-            <button id="btn-test-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
+            <button id="btn-test-mail" class="btn-success" onclick="testMail()"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
           </div>
           <!-- ==========管理员专属：给成员发送邮件模块========== -->
           <div id="adminMailBlock" class="admin-mail-send-block" style="display:none">
@@ -279,8 +263,8 @@
               <label>邮件内容</label>
               <textarea id="adminMailContent" placeholder="填写要发送给成员的提醒内容">您好，这是逸想待办系统的测试提醒邮件，请查收您今日待办任务。</textarea>
             </div>
-            <button id="btn-admin-send-member-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
-            <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
+            <button id="btn-admin-send-member-mail" class="btn-success" onclick="sendMemberMail()"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
+            <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px" onclick="batchSendRemind()"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
           </div>
         </div>
         <div id="tab-member" class="hidden">
@@ -323,14 +307,14 @@ try{
     todos:[],
     mailLogs:[],
     mailConfig:{
-      serviceId:"",
-      templateId:"",
-      publicKey:""
+      serviceId:"YinYifei021011",
+      templateId:"template_jftljpv",
+      publicKey:"hGimZnujSUONkURfm"
     },
     aiConfig:{
-      baseUrl:"",
-      apiKey:"",
-      model:""
+      baseUrl:"https://api.siliconflow.cn/v1",
+      apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu",
+      model:"Qwen/Qwen2.5-7B-Instruct"
     },
     cloudConfig:{
       binId:"6ad63400ac6210605a3f6830",
@@ -514,29 +498,31 @@ function saveAIConfig(){
 }
 //AI
 async function aiImproveNote(){
+  //直接硬编码配置，不依赖全局data
+  const aiConfig = {
+    baseUrl:"https://open.bigmodel.cn/api/paas/v4",
+    apiKey:"5476224fb2fa41e2b742097f9332f353.n5DZsvJnwWkyeZ6F",
+    model:"glm-4-flash"
+  };
   const inp = document.getElementById("todo-note");
   const txt = inp.value.trim();
   if(!txt){alert("请输入备注草稿");return;}
-  if(!data.aiConfig?.baseUrl || !data.aiConfig?.apiKey || !data.aiConfig?.model){
-    alert("请管理员先在个人设置中配置AI接口");
-    return;
-  }
   //按钮变加载状态
   const btn = document.getElementById("btn-ai-note");
   const oldText = btn.innerHTML;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
   btn.disabled = true;
   try{
-    const resp = await fetch(`${data.aiConfig.baseUrl}/chat/completions`,{
+    const resp = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(aiConfig.baseUrl + "/chat/completions")}`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        "Authorization":`Bearer ${data.aiConfig.apiKey}`
+        "Authorization":`Bearer ${aiConfig.apiKey}`
       },
       body:JSON.stringify({
-        model: data.aiConfig.model,
+        model: aiConfig.model,
         messages:[
-          {role:"system", content:"你是一个工作备注优化助手，把用户输入的粗糙工作记录优化成专业、简洁、通顺的工作汇报风格，不要改变原意，不要加多余内容，直接输出优化后的文本。"},
+          {role:"system", content:"你是专业的职场工作汇报优化助手，请把用户输入的粗糙工作记录，优化成正式、专业、逻辑清晰的工作汇报文本：1. 把口语化、零散的表述整理成通顺的书面语；2. 梳理工作逻辑，突出完成的动作和结果；3. 不改变原意，不添加额外信息，不删减核心内容；4. 直接输出优化后的最终文本，不要任何解释和开场白。"},
           {role:"user", content: txt}
         ],
         temperature: 0.3
@@ -1111,15 +1097,18 @@ function saveMailConfig(){
 }
 //统一发邮件函数
 async function sendMail(receiverEmail, subject, textContent){
-  if(!data.mailConfig?.serviceId || !data.mailConfig?.templateId || !data.mailConfig?.publicKey){
-    throw new Error("请管理员先在个人设置中配置EmailJS发件服务");
-  }
+  //直接硬编码EmailJS配置
+  const mailConfig = {
+    serviceId:"YinYifei021011",
+    templateId:"template_jftljpv",
+    publicKey:"hGimZnujSUONkURfm"
+  };
   //初始化EmailJS
-  emailjs.init(data.mailConfig.publicKey);
+  emailjs.init(mailConfig.publicKey);
   //发送邮件，模板参数需要和EmailJS里的模板变量对应
   return emailjs.send(
-    data.mailConfig.serviceId,
-    data.mailConfig.templateId,
+    mailConfig.serviceId,
+    mailConfig.templateId,
     {
       to_email: receiverEmail,
       subject: subject,
@@ -1355,10 +1344,19 @@ window.onload = async function(){
       }
     }
   }
+  //强制硬编码配置，不被旧数据覆盖
+  data.mailConfig = {
+    serviceId:"YinYifei021011",
+    templateId:"template_jftljpv",
+    publicKey:"hGimZnujSUONkURfm"
+  };
+  data.aiConfig = {
+    baseUrl:"https://api.siliconflow.cn/v1",
+    apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu",
+    model:"Qwen/Qwen2.5-7B-Instruct"
+  };
   //自动初始化EmailJS
-  if(data.mailConfig?.publicKey){
-    emailjs.init(data.mailConfig.publicKey);
-  }
+  emailjs.init(data.mailConfig.publicKey);
   //自动登录
   const savedUser = localStorage.getItem("_logged_user");
   if(savedUser){
