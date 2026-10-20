@@ -254,7 +254,7 @@
           </div>
           <!-- ==========管理员专属：给成员发送邮件模块========== -->
           <div id="adminMailBlock" class="admin-mail-send-block" style="display:none">
-            <h3><i class="fa-solid fa-envelope-circle-check"></i> 管理员：向成员发送测试邮件</h3>
+            <h3><i class="fa-solid fa-envelope-circle-check"></i> 管理员：给成员发送工作提醒</h3>
             <div class="form-item">
               <label>选择成员</label>
               <select id="selectMemberForMail"></select>
@@ -263,7 +263,7 @@
               <label>邮件内容</label>
               <textarea id="adminMailContent" placeholder="填写要发送给成员的提醒内容">您好，这是逸想待办系统的测试提醒邮件，请查收您今日待办任务。</textarea>
             </div>
-            <button id="btn-admin-send-member-mail" class="btn-success" onclick="sendMemberMail()"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
+            <button id="btn-admin-send-member-mail" class="btn-success" onclick="adminSendMemberMail()"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
             <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px" onclick="batchSendRemind()"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
           </div>
         </div>
@@ -532,8 +532,8 @@ async function aiImproveNote(){
     const result = await resp.json();
     if(result.choices && result.choices[0] && result.choices[0].message){
       const optimized = result.choices[0].message.content.trim();
-      inp.value = optimized;
-      alert("✅AI备注优化完成");
+      //弹出对比弹窗，不直接覆盖原草稿
+      showAiOptimizeModal(txt, optimized, inp);
     }else{
       alert("❌AI返回结果异常："+JSON.stringify(result));
     }
@@ -543,6 +543,42 @@ async function aiImproveNote(){
     btn.innerHTML = oldText;
     btn.disabled = false;
   }
+}
+//AI优化对比弹窗
+function showAiOptimizeModal(originalText, optimizedText, inpEl){
+  //创建弹窗
+  const oldModal = document.getElementById("aiOptimizeModal");
+  if(oldModal) oldModal.remove();
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay show";
+  modal.id = "aiOptimizeModal";
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:800px">
+      <h3><i class="fa-solid fa-wand-magic-sparkles"></i> 备注优化结果</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+        <div>
+          <label style="font-size:13px;color:#64748b;margin-bottom:6px;display:block">优化前草稿</label>
+          <div style="background:#f8fafc;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto">${originalText}</div>
+        </div>
+        <div>
+          <label style="font-size:13px;color:#6366f1;margin-bottom:6px;display:block">AI优化后结果</label>
+          <div style="background:#eef2ff;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto">${optimizedText}</div>
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:16px">
+        <button class="btn-gray" onclick="document.getElementById('aiOptimizeModal').remove()">保留原草稿</button>
+        <button class="btn-purple" onclick="document.getElementById('aiOptimizeModal').remove();document.getElementById('btn-ai-note').click()"><i class="fa-solid fa-rotate"></i> 再优化一次</button>
+        <button class="btn-success" onclick="applyOptimizeResult('${optimizedText.replace(/'/g, "\\'")}')"><i class="fa-solid fa-check"></i> 用这个优化结果</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  window._currentInpEl = inpEl;
+}
+function applyOptimizeResult(text){
+  window._currentInpEl.value = text;
+  document.getElementById("aiOptimizeModal").remove();
+  alert("✅已应用优化后的备注");
 }
 async function generateReport(){
   const title = document.getElementById("todo-title").value.trim();
