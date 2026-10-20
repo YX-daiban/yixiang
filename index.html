@@ -500,9 +500,9 @@ function saveAIConfig(){
 async function aiImproveNote(){
   //直接硬编码配置，不依赖全局data
   const aiConfig = {
-    baseUrl:"https://open.bigmodel.cn/api/paas/v4",
-    apiKey:"5476224fb2fa41e2b742097f9332f353.n5DZsvJnwWkyeZ6F",
-    model:"glm-4-flash"
+    baseUrl:"https://api.siliconflow.cn/v1",
+    apiKey:"sk-ivexkzsvdyyqaaupncxfzghfvlcnmylcytojbigpdkdtpyac",
+    model:"Qwen/Qwen2.5-7B-Instruct"
   };
   const inp = document.getElementById("todo-note");
   const txt = inp.value.trim();
@@ -522,7 +522,7 @@ async function aiImproveNote(){
       body:JSON.stringify({
         model: aiConfig.model,
         messages:[
-          {role:"system", content:"你是专业的职场工作汇报优化助手，请把用户输入的粗糙工作记录，优化成正式、专业、逻辑清晰的工作汇报文本：1. 把口语化、零散的表述整理成通顺的书面语；2. 梳理工作逻辑，突出完成的动作和结果；3. 不改变原意，不添加额外信息，不删减核心内容；4. 直接输出优化后的最终文本，不要任何解释和开场白。"},
+          {role:"system", content:"你是资深职场秘书，专门把员工随手记的零散工作草稿，重写成正式、通顺、逻辑清晰的工作汇报文字：1. 把口语化、零散的短句整理成连贯的书面表达；2. 梳理清楚每件事的动作和结果，突出工作产出；3. 绝对不能只改标点符号，必须重组语言、理顺逻辑；4. 不改变原意，不添加虚构内容，不删减核心信息；5. 直接输出优化后的最终文本，不要任何解释。"},
           {role:"user", content: txt}
         ],
         temperature: 0.3
