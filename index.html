@@ -513,7 +513,7 @@ async function aiImproveNote(){
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
   btn.disabled = true;
   try{
-    const resp = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(aiConfig.baseUrl + "/chat/completions")}`,{
+    const resp = await fetch(`${aiConfig.baseUrl}/chat/completions`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
