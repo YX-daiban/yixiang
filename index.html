@@ -248,7 +248,7 @@
           </div>
           <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
           <div class="form-item"><label>邮箱地址</label><input id="user-email" placeholder="xxx@xxx.com" /></div>
-          <button id="btn-save-email" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
+          <button id="btn-save-email" class="btn-primary" onclick="saveEmail()"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
           <div id="testMailBlock" style="display:none">
             <button id="btn-test-mail" class="btn-success" onclick="testMail()"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
           </div>
@@ -272,7 +272,7 @@
           <div class="form-item"><label>成员账号（≥2个中文汉字）</label><input id="new-member-name" placeholder="例：李明、王浩宇、张三丰" /></div>
           <div class="form-item"><label>初始密码</label><input id="new-member-pwd" placeholder="设置初始密码" /></div>
           <div class="form-item"><label>邮箱地址（必填）</label><input id="new-member-email" placeholder="例如：liming@example.com" /></div>
-          <button id="btn-add-member" class="btn-primary"><i class="fa-solid fa-user-plus"></i> 添加成员</button>
+          <button id="btn-add-member" class="btn-primary" onclick="addMember()"><i class="fa-solid fa-user-plus"></i> 添加成员</button>
           <hr class="divider" />
           <h3>成员列表与权限配置</h3>
           <div id="member-list"></div>
