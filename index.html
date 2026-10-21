@@ -230,7 +230,7 @@
         <div id="tab-category" class="hidden">
           <h2><i class="fa-solid fa-folder-tree"></i> 大类管理</h2>
           <div class="form-item"><label>新增大类名称</label><input id="new-category-name" placeholder="输入自定义大类名称，例如：测试工作" /></div>
-          <button id="btn-add-cat" class="btn-primary"><i class="fa-solid fa-plus"></i> 添加大类</button>
+          <button id="btn-add-cat" class="btn-primary" onclick="addCategory()"><i class="fa-solid fa-plus"></i> 添加大类</button>
           <div id="category-list"></div>
         </div>
         <div id="tab-info" class="hidden">
@@ -934,8 +934,8 @@ function renderTodoList(){
         <span><i class="fa-solid fa-hourglass-half"></i> 用时：${item.useMin ? item.useMin+"分钟":"-"}</span>
       </div>
       <div class="todo-actions">
-        <button class="btn-gray btn-edit-todo" data-id="${item.id}"><i class="fa-solid fa-pen"></i> 编辑</button>
-        <button class="btn-danger btn-del-todo" data-id="${item.id}"><i class="fa-solid fa-trash"></i> 删除</button>
+        <button class="btn-gray btn-edit-todo" onclick="editTodo(${item.id})"><i class="fa-solid fa-pen"></i> 编辑</button>
+        <button class="btn-danger btn-del-todo" onclick="delTodo(${item.id})"><i class="fa-solid fa-trash"></i> 删除</button>
       </div>
     </div>`
   })
@@ -1006,6 +1006,27 @@ function addCategory(){
   saveData();
   renderCategoryList();
   document.getElementById("new-category-name").value="";
+}
+//全局删除待办函数
+function delTodo(id){
+  if(!confirm("确认删除这个待办？")) return;
+  data.todos = data.todos.filter(t=>t.id !== id);
+  saveData();
+  renderTodoList();
+  alert("✅待办已删除");
+}
+//全局编辑待办函数
+function editTodo(id){
+  const todo = data.todos.find(t=>t.id === id);
+  if(!todo) return;
+  document.getElementById("todo-title").value = todo.title;
+  document.getElementById("category-combo-input").value = todo.category;
+  document.getElementById("todo-priority").value = todo.priority;
+  document.getElementById("todo-status").value = todo.status;
+  document.getElementById("todo-note").value = todo.note;
+  document.getElementById("todo-start").value = todo.startTime||"";
+  document.getElementById("todo-end").value = todo.endTime||"";
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 function renderCategoryList(){
   const wrap = document.getElementById("category-list");
