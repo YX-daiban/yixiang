@@ -836,13 +836,16 @@ async function doRegister(){
   // 自动发欢迎邮件
   if(data.mailConfig?.publicKey && em){
     try{
-      emailjs.send(data.mailConfig.serviceId || "YinYifei021011", "template_t4nri23", {
+      emailjs.init(data.mailConfig.publicKey);
+      await emailjs.send(data.mailConfig.serviceId || "YinYifei021011", "template_t4nri23", {
         to_email: em,
         to_name: un,
         user_pwd: pw,
         from_name: "一页清单系统"
-      }).catch(()=>{});
-    }catch(e){}
+      });
+    }catch(e){
+      console.log("欢迎邮件发送失败：", e);
+    }
   }
 
   // 自动登录
