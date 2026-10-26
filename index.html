@@ -836,11 +836,11 @@ async function doRegister(){
   // 自动发欢迎邮件
   if(data.mailConfig?.publicKey && em){
     try{
-      emailjs.send(data.mailConfig.serviceId || "YinYifei021011", "template_jftljpv", {
+      emailjs.send(data.mailConfig.serviceId || "YinYifei021011", "template_t4nri23", {
         to_email: em,
         to_name: un,
-        title: "欢迎使用一页清单",
-        content: `欢迎 ${un} 加入一页清单！\n你的账号已注册成功，账号：${un}\n请妥善保管密码。`
+        user_pwd: pw,
+        from_name: "一页清单系统"
       }).catch(()=>{});
     }catch(e){}
   }
