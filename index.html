@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>逸想待办</title>
+  <title>一页清单</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * {margin: 0;padding: 0;box-sizing: border-box;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC","Hiragino Sans GB", "Microsoft YaHei", sans-serif;}
     body {min-height: 100vh;background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 45%, #f5f3ff 100%);color: #1e293b;padding: 24px 16px 40px;}
@@ -44,6 +45,7 @@
     .btn-gray {background: #f1f5f9;color: #334155;border: 1px solid #e2e8f0;}
     .btn-gray:hover {background: #e2e8f0;}
     .btn-danger {background: linear-gradient(135deg, #f87171, #ef4444);color: #fff;box-shadow: 0 10px 24px rgba(239, 68, 68, 0.32);}
+    .btn-warning {background: linear-gradient(135deg, #fbbf24, #f59e0b);color: #fff;box-shadow: 0 10px 24px rgba(245, 158, 11, 0.32);}
     .btn-danger:hover {transform: translateY(-1px);box-shadow: 0 14px 30px rgba(239, 68, 68, 0.4);}
     .row {display: flex;gap: 14px;flex-wrap: wrap;}
     .row .form-item {flex: 1;min-width: 220px;}
@@ -79,6 +81,7 @@
     .status-wait {background: #f1f5f9 !important;color: #475569 !important;}
     .status-doing {background: #eef2ff !important;color: #4f46e5 !important;}
     .status-finish {background: #ecfdf5 !important;color: #059669 !important;}
+    .status-paused {background: #fef3c7 !important;color: #d97706 !important;}
     .summary-block {background: linear-gradient(135deg, #f0f9ff, #eef2ff);border: 1px solid #e0e7ff;border-radius: 20px;padding: 20px;margin-top: 24px;}
     .summary-group {margin: 12px 0;padding: 14px;background: #fff;border-radius: 16px;border: 1px solid #eef2ff;}
     .summary-group strong {color: #4f46e5;}
@@ -91,9 +94,13 @@
     .combo-input {width: 100%;padding: 12px 14px;border: 1px solid #e2e8f0;border-radius: 14px;font-size: 14px;background: #fff;transition: all 0.25s ease;}
     .combo-input:focus {outline: none;border-color: #818cf8;box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.18);}
     .combo-dropdown {position: absolute;top: calc(100% + 6px);left: 0;right: 0;background: #fff;border: 1px solid #e2e8f0;border-radius: 16px;box-shadow: 0 18px 40px rgba(71, 85, 105, 0.18);max-height: 240px;overflow-y: auto;z-index: 99;}
-    .combo-item {padding: 12px 14px;cursor: pointer;font-size: 14px;color: #334155;}
+    .combo-item {padding: 12px 14px;cursor: pointer;font-size: 14px;color: #334155;display:flex;align-items:center;justify-content:space-between;}
     .combo-item:hover {background: #eef2ff;color: #4f46e5;}
-    /* 权限多选下拉 */
+    .combo-item.is-custom {color:#7c3aed;font-style:italic;}
+    .combo-select-box {width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#0f172a;transition:all 0.25s ease;}
+    .combo-select-box:hover {border-color:#818cf8;}
+    .combo-select-box.placeholder {color:#94a3b8;}
+    .combo-select-box i {color:#94a3b8;font-size:12px;}
     .perm-dropdown-wrap{position:relative;width:100%;max-width:360px}
     .perm-select-box{width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
     .perm-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.1);z-index:99;max-height:220px;overflow-y:auto;padding:6px;}
@@ -102,11 +109,12 @@
     .perm-item input[type="checkbox"]{width:16px;height:16px;margin:0;cursor:pointer;}
     .perm-item label{margin:0;cursor:pointer;font-size:14px;color:#334155;}
     .perm-tag{display:inline-block;background:#eef2ff;color:#4f46e5;border-radius:8px;padding:4px 8px;font-size:12px;margin:2px;}
-    /*邮件弹窗样式*/
     .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;}
     .modal-box{background:#fff;border-radius:20px;width:90%;max-width:520px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
     .modal-overlay.show{display:flex;}
     .admin-mail-send-block{background:#eef2ff;padding:18px;border-radius:18px;margin-top:20px;border:1px solid #c7d2fe;}
+    .edit-banner{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+    .edit-banner button{margin:0;padding:4px 10px;font-size:12px;}
     @media (max-width: 720px) {
       body {padding: 14px 10px 30px;}
       .card,.login-card {padding: 18px;border-radius: 18px;}
@@ -121,7 +129,7 @@
   <div class="app-shell">
     <div class="top-bar">
       <div class="brand-center-wrap">
-        <div class="brand-logo"><i class="fa-solid fa-check"></i></div>逸想待办
+        <div class="brand-logo"><i class="fa-solid fa-check"></i></div>一页清单
       </div>
       <div class="user-info" id="user-info" style="display:none">
         <div class="avatar" id="user-avatar">A</div>
@@ -131,7 +139,7 @@
     <div id="page-login" class="login-card">
       <div class="login-header">
         <div class="login-logo-wrap"><i class="fa-solid fa-check"></i></div>
-        <h2 class="login-title">逸想待办</h2>
+        <h2 class="login-title">一页清单</h2>
         <div class="login-subtitle">登录你的待办管理系统</div>
       </div>
       <div class="form-item">
@@ -145,29 +153,36 @@
       <button id="login-btn" class="btn-primary" style="width:100%;justify-content:center">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> 登录
       </button>
-
       <div id="login-tip" class="login-tip"></div>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:#6366f1">
+        还没有账号？<a href="javascript:void(0)" id="show-register-link" style="color:#6366f1;font-weight:600;cursor:pointer">立即注册</a>
+      </div>
     </div>
     <div id="page-main" class="hidden">
       <div class="card">
         <div class="tab-bar" id="tabBarContainer">
-          <!-- 标签会根据当前用户权限动态渲染 -->
           <button id="logout-btn" class="btn-gray"><i class="fa-solid fa-right-from-bracket"></i> 退出登录</button>
         </div>
         <div id="tab-todo">
+          <div id="edit-banner" class="edit-banner hidden">
+            <span><i class="fa-solid fa-pen-to-square"></i> 正在编辑待办记录，修改后点击"保存修改"</span>
+            <button class="btn-gray" id="btn-cancel-edit"><i class="fa-solid fa-xmark"></i> 取消编辑</button>
+          </div>
           <h2><i class="fa-solid fa-circle-plus"></i> 新增待办</h2>
           <div class="form-item" id="assign-wrap" style="display:none">
             <label>指派给（管理员可用）</label>
             <select id="assign-user"></select>
           </div>
           <div class="form-item">
-            <label>大类</label>
+            <label>工作事项（选择具体工作项）</label>
             <div class="combo-wrap">
-              <input id="category-combo-input" class="combo-input" placeholder="搜索大类 / 直接输入自定义大类" />
-              <div id="category-combo-dropdown" class="combo-dropdown hidden"></div>
+              <div id="category-select-box" class="combo-select-box">
+                <span id="category-select-text">请选择工作事项</span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div id="category-combo-dropdown" class="combo-dropdown hidden" style="max-height:320px"></div>
             </div>
           </div>
-          <div class="form-item"><label>待办名称</label><input id="todo-title" placeholder="输入本次工作任务名称" /></div>
           <div class="form-item">
             <label>优先级</label>
             <select id="todo-priority">
@@ -187,7 +202,7 @@
           <div class="form-item">
             <label>备注信息</label>
             <textarea id="todo-note" placeholder="填写工作简述，可基于备注生成工作汇报"></textarea>
-            <button id="btn-ai-note" class="btn-purple" style="margin-top:10px" onclick="aiImproveNote()"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
+            <button id="btn-ai-note" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
           </div>
           <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 时间格式：XXXX/XX/XX XX:XX｜Alt+S 填充开始时间｜Alt+E 填充完成时间</div>
           <div class="row">
@@ -196,7 +211,7 @@
           </div>
           <button id="btn-add-todo" class="btn-primary"><i class="fa-solid fa-plus"></i> 添加待办记录</button>
           <button id="btn-gen-report" class="btn-purple"><i class="fa-solid fa-file-lines"></i> 生成日报文本</button>
-          <button id="btn-export" class="btn-teal"><i class="fa-solid fa-copy"></i> 导出当日记录</button>
+          <button id="btn-export" class="btn-teal"><i class="fa-solid fa-calendar-days"></i> 导出日报（选日期）</button>
           <div id="ai-output" class="ai-result hidden"></div>
           <hr class="divider" />
           <div class="filter-bar">
@@ -209,11 +224,21 @@
                   <option value="wait">未开始</option>
                   <option value="doing">进行中</option>
                   <option value="finish">已完成</option>
+                  <option value="overdue">已逾期</option>
                 </select>
               </div>
               <div class="form-item">
-                <label>大类筛选</label>
-                <select id="filter-category"><option value="">全部大类</option></select>
+                <label>优先级</label>
+                <select id="filter-priority">
+                  <option value="">全部优先级</option>
+                  <option value="high">🔴 高优先级</option>
+                  <option value="mid">🟠 中优先级</option>
+                  <option value="low">🟢 低优先级</option>
+                </select>
+              </div>
+              <div class="form-item">
+                <label>工作项筛选</label>
+                <select id="filter-category"><option value="">全部工作项</option></select>
               </div>
             </div>
             <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
@@ -230,7 +255,7 @@
         <div id="tab-category" class="hidden">
           <h2><i class="fa-solid fa-folder-tree"></i> 大类管理</h2>
           <div class="form-item"><label>新增大类名称</label><input id="new-category-name" placeholder="输入自定义大类名称，例如：测试工作" /></div>
-          <button id="btn-add-cat" class="btn-primary" onclick="addCategory()"><i class="fa-solid fa-plus"></i> 添加大类</button>
+          <button id="btn-add-cat" class="btn-primary"><i class="fa-solid fa-plus"></i> 添加大类</button>
           <div id="category-list"></div>
         </div>
         <div id="tab-info" class="hidden">
@@ -243,16 +268,14 @@
             <div class="tip-text" style="margin:0 0 10px 0">换电脑或清缓存前，先点导出备份保存JSON文件；新电脑打开后点导入备份，就能恢复所有账号、待办和邮箱配置。</div>
             <button id="btn-export-backup" class="btn-teal"><i class="fa-solid fa-download"></i> 导出全部数据备份</button>
             <button id="btn-import-backup" class="btn-primary"><i class="fa-solid fa-upload"></i> 导入备份恢复数据</button>
-            <button id="btn-gen-sync-code" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-key"></i> 生成配置同步码</button>
             <input type="file" id="import-backup-file" accept=".json" style="display:none" />
           </div>
           <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
           <div class="form-item"><label>邮箱地址</label><input id="user-email" placeholder="xxx@xxx.com" /></div>
-          <button id="btn-save-email" class="btn-primary" onclick="saveEmail()"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
+          <button id="btn-save-email" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> 保存邮箱</button>
           <div id="testMailBlock">
-            <button id="btn-test-mail" class="btn-success" onclick="testMail()"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
+            <button id="btn-test-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 给自己发送测试邮件</button>
           </div>
-          <!-- ==========管理员专属：给成员发送邮件模块========== -->
           <div id="adminMailBlock" class="admin-mail-send-block" style="display:none">
             <h3><i class="fa-solid fa-envelope-circle-check"></i> 管理员：给成员发送工作提醒</h3>
             <div class="form-item">
@@ -261,10 +284,10 @@
             </div>
             <div class="form-item">
               <label>邮件内容</label>
-              <textarea id="adminMailContent" placeholder="填写要发送给成员的提醒内容">您好，这是逸想待办系统的测试提醒邮件，请查收您今日待办任务。</textarea>
+              <textarea id="adminMailContent" placeholder="填写要发送给成员的提醒内容">您好，这是一页清单系统的测试提醒邮件，请查收您今日待办任务。</textarea>
             </div>
-            <button id="btn-admin-send-member-mail" class="btn-success" onclick="adminSendMemberMail()"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
-            <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px" onclick="batchSendRemind()"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
+            <button id="btn-admin-send-member-mail" class="btn-success"><i class="fa-solid fa-paper-plane"></i> 发送邮件给选中成员</button>
+            <button id="btn-batch-remind" class="btn-danger" style="margin-top:10px"><i class="fa-solid fa-bullhorn"></i> 一键提醒所有有未完成任务的成员</button>
           </div>
         </div>
         <div id="tab-member" class="hidden">
@@ -272,7 +295,7 @@
           <div class="form-item"><label>成员账号（≥2个中文汉字）</label><input id="new-member-name" placeholder="例：李明、王浩宇、张三丰" /></div>
           <div class="form-item"><label>初始密码</label><input id="new-member-pwd" placeholder="设置初始密码" /></div>
           <div class="form-item"><label>邮箱地址（必填）</label><input id="new-member-email" placeholder="例如：liming@example.com" /></div>
-          <button id="btn-add-member" class="btn-primary" onclick="addMember()"><i class="fa-solid fa-user-plus"></i> 添加成员</button>
+          <button id="btn-add-member" class="btn-primary"><i class="fa-solid fa-user-plus"></i> 添加成员</button>
           <hr class="divider" />
           <h3>成员列表与权限配置</h3>
           <div id="member-list"></div>
@@ -282,105 +305,10 @@
     </div>
   </div>
 <script>
-// 初始化数据
-const STORAGE_KEY = "yixiang_todo_data";
-let data;
-try{
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    data = JSON.parse(raw);
-  }else{
-    throw new Error("空");
-  }
-}catch(e){
-  data = {
-    users: [
-      {
-        username:"yinyifei",
-        pwd:"admin123",
-        isAdmin:true,
-        email:"",
-        permissions:{}
-      }
-    ],
-    categories:[],
-    todos:[],
-    mailLogs:[],
-    mailConfig:{
-      serviceId:"YinYifei021011",
-      templateId:"template_jftljpv",
-      publicKey:"hGimZnujSUONkURfm"
-    },
-    aiConfig:{
-      baseUrl:"https://api.siliconflow.cn/v1",
-      apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu",
-      model:"Qwen/Qwen2.5-7B-Instruct"
-    },
-    cloudConfig:{
-      binId:"6ad63400ac6210605a3f6830",
-      apiKey:"$2a$10$dG0UsmJj.smg4Flv8ion6.7xJ8HhloirORNrbj7zLB6EkhKkxbZ4a"
-    }
-  };
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-}
-//如果有硬编码的云端配置（共享版HTML），直接覆盖本地的云端配置
-if(window.HARDCODED_CLOUD){
-  if(!data.cloudConfig) data.cloudConfig = {};
-  data.cloudConfig.binId = window.HARDCODED_CLOUD.binId;
-  data.cloudConfig.apiKey = window.HARDCODED_CLOUD.apiKey;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-function saveData(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  //如果配置了云端，自动同步到jsonbin
-  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
-    fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}`,{
-      method:"PUT",
-      headers:{
-        "Content-Type":"application/json",
-        "X-Master-Key": data.cloudConfig.apiKey
-      },
-      body: JSON.stringify(data)
-    }).catch(e=>console.log("云端同步失败:",e));
-  }
-}
-//从云端拉取最新数据
-async function fetchCloudData(){
-  if(!data.cloudConfig?.binId || !data.cloudConfig?.apiKey) return;
-  try{
-    const resp = await fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}/latest?t=${Date.now()}`,{
-      headers:{
-        "X-Master-Key": data.cloudConfig.apiKey,
-        "Cache-Control": "no-cache"
-      }
-    });
-    const result = await resp.json();
-    if(result.record){
-      data = result.record;
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-      console.log("云端数据同步成功");
-    }
-  }catch(e){
-    console.log("云端拉取失败:",e);
-  }
-}
-let currentUser = null;
-let filterStatusVal = "";
-let filterCatVal = "";
-//权限定义
-const PERM = {
-  viewAllTodo:"viewAllTodo",
-  manageCategory:"manageCategory",
-  manageMember:"manageMember",
-  viewMailLog:"viewMailLog",
-  sendMail:"sendMail"
-}
-const permLabel = {
-  viewAllTodo:"查看全员任务",
-  manageCategory:"大类管理",
-  manageMember:"成员管理",
-  viewMailLog:"查看邮件日志",
-  sendMail:"发送邮件提醒"
+// ============ 工具函数 ============
+function esc(str){
+  if(str==null) return "";
+  return String(str).replace(/[&<>"']/g, s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
 }
 function getNowTimeStr(){
   const d=new Date();
@@ -391,44 +319,203 @@ function getNowTimeStr(){
   const min=String(d.getMinutes()).padStart(2,"0");
   return `${y}/${m}/${day} ${h}:${min}`;
 }
+function parseTime(s){
+  if(!s) return NaN;
+  const t=new Date(String(s).replace(/\//g,"-"));
+  return t.getTime();
+}
+// 全局逾期判断：没完成（进行中或暂停），且开始时间 < 今天0点
+function isItemOverdue(x){
+  if(x.status === "finish" || x.status === "wait") return false;
+  const st = parseTime(x.startTime);
+  const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+  return !isNaN(st) && st < todayStart;
+}
+
+// ============ 数据初始化 ============
+const STORAGE_KEY = "yixiang_todo_data";
+let data;
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ data = JSON.parse(raw); }
+  else { throw new Error("空"); }
+}catch(e){
+  data = {
+    users: [{ username:"yinyifei", pwd:"admin123", isAdmin:true, email:"", permissions:{} }],
+    categories:[], todos:[], mailLogs:[],
+    nextTodoId: 1,
+    mailConfig:{ serviceId:"YinYifei021011", templateId:"template_jftljpv", publicKey:"hGimZnujSUONkURfm" },
+    aiConfig:{ baseUrl:"https://api.siliconflow.cn/v1", apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu", model:"Qwen/Qwen2.5-7B-Instruct" },
+    cloudConfig:{ binId:"6ad63400ac6210605a3f6830", apiKey:"$2a$10$dG0UsmJj.smg4Flv8ion6.7xJ8HhloirORNrbj7zLB6EkhKkxbZ4a" }
+  };
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+if(window.HARDCODED_CLOUD){
+  if(!data.cloudConfig) data.cloudConfig = {};
+  data.cloudConfig.binId = window.HARDCODED_CLOUD.binId;
+  data.cloudConfig.apiKey = window.HARDCODED_CLOUD.apiKey;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+function genTodoId(){
+  if(!data.nextTodoId) data.nextTodoId = 1;
+  // 兼容旧数据：如果已有todo的id比nextTodoId大，从最大id+1开始
+  const maxId = data.todos.reduce((m,t)=>Math.max(m, typeof t.id==="number"?Math.floor(t.id):0), 0);
+  data.nextTodoId = Math.max(data.nextTodoId, maxId+1);
+  return data.nextTodoId++;
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
+    fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}`,{
+      method:"PUT",
+      headers:{ "Content-Type":"application/json", "X-Master-Key": data.cloudConfig.apiKey },
+      body: JSON.stringify(data)
+    }).catch(e=>console.log("云端同步失败:",e));
+  }
+}
+async function fetchCloudData(){
+  if(!data.cloudConfig?.binId || !data.cloudConfig?.apiKey) return;
+  try{
+    const resp = await fetch(`https://api.jsonbin.io/v3/b/${data.cloudConfig.binId}/latest?t=${Date.now()}`,{
+      headers:{ "X-Master-Key": data.cloudConfig.apiKey, "Cache-Control": "no-cache" }
+    });
+    const result = await resp.json();
+    if(result.record){
+      data = result.record;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      console.log("云端数据同步成功");
+    }
+  }catch(e){ console.log("云端拉取失败:",e); }
+}
+
+// ============ 权限 ============
+let currentUser = null;
+let filterStatusVal = "";
+let filterCatVal = "";
+const PERM = { viewAllTodo:"viewAllTodo", manageCategory:"manageCategory", manageMember:"manageMember", viewMailLog:"viewMailLog", sendMail:"sendMail" };
+const permLabel = { viewAllTodo:"查看全员任务", manageCategory:"大类管理", manageMember:"成员管理", viewMailLog:"查看邮件日志", sendMail:"发送邮件提醒" };
 function hasPermission(permKey){
   if(currentUser?.isAdmin) return true;
   return !!currentUser?.permissions?.[permKey];
 }
-//全局事件委托
+
+// ============ 全局事件委托 ============
 document.addEventListener("click",function(e){
   const target = e.target;
+  // 删除成员
   if(target.classList.contains("btn-del-member")){
     const un = target.dataset.user;
     if(confirm(`确认删除成员【${un}】？`)){
       data.users = data.users.filter(u=>u.username!==un);
-      saveData();
-      renderMemberList();
+      saveData(); renderMemberList();
     }
+    return;
   }
+  // 删除大类
   if(target.classList.contains("btn-del-cat")){
     const cname = target.dataset.catname;
     if(confirm(`确认删除大类【${cname}】`)){
       data.categories = data.categories.filter(c=>c.name!==cname);
-      saveData();
-      renderCategoryList();
+      saveData(); renderCategoryList();
     }
+    return;
   }
-  if(target.classList.contains("tab")){
-    switchTab(target.dataset.tab);
-  }
-  //权限下拉展开/收起
+  // tab 切换
+  if(target.classList.contains("tab")){ switchTab(target.dataset.tab); return; }
+  // 权限下拉展开/收起
   if(target.classList.contains("perm-select-box")){
     const wrap = target.closest(".perm-dropdown-wrap");
     const drop = wrap.querySelector(".perm-dropdown");
     drop.classList.toggle("hidden");
+    return;
   }
-  //点击空白关闭权限下拉
   if(!target.closest(".perm-dropdown-wrap")){
     document.querySelectorAll(".perm-dropdown").forEach(d=>d.classList.add("hidden"));
   }
-})
-//权限复选框变更保存
+  // 编辑待办
+  if(target.classList.contains("btn-edit-todo")){
+    const id = Number(target.dataset.id);
+    const todo = data.todos.find(t=>Number(t.id)===id);
+    if(!todo) return;
+    fillFormForEdit(todo);
+    return;
+  }
+  // 开始待办（从未开始变进行中，自动填开始时间）
+  if(target.classList.contains("btn-start-todo")){
+    const id = Number(target.dataset.id);
+    const todo = data.todos.find(t=>Number(t.id)===id);
+    if(!todo) return;
+    todo.status = "doing";
+    todo.startTime = getNowTimeStr();
+    saveData();
+    renderTodoList();
+    return;
+  }
+  // 暂停待办（累计时长，清空开始时间）
+  if(target.classList.contains("btn-pause-todo")){
+    const id = Number(target.dataset.id);
+    const todo = data.todos.find(t=>Number(t.id)===id);
+    if(!todo) return;
+    const t1 = parseTime(todo.startTime);
+    const t2 = Date.now();
+    if(!isNaN(t1)){
+      const mins = Math.round((t2-t1)/60000);
+      todo.useMin = (todo.useMin||0) + mins;
+    }
+    todo.status = "paused";
+    // 保留startTime用于逾期判断，继续时会覆盖
+    saveData();
+    renderTodoList();
+    return;
+  }
+  // 继续待办（从暂停恢复进行中，重新计开始时间）
+  if(target.classList.contains("btn-resume-todo")){
+    const id = Number(target.dataset.id);
+    const todo = data.todos.find(t=>Number(t.id)===id);
+    if(!todo) return;
+    todo.status = "doing";
+    todo.startTime = getNowTimeStr();
+    saveData();
+    renderTodoList();
+    return;
+  }
+  // 完成待办
+  if(target.classList.contains("btn-complete-todo")){
+    const id = Number(target.dataset.id);
+    const todo = data.todos.find(t=>Number(t.id)===id);
+    if(!todo) return;
+    // 如果当前是doing状态，先累计最后一段时长
+    if(todo.status === "doing"){
+      const t1 = parseTime(todo.startTime);
+      const t2 = Date.now();
+      if(!isNaN(t1)){
+        const mins = Math.round((t2-t1)/60000);
+        todo.useMin = (todo.useMin||0) + mins;
+      }
+      todo.startTime = "";
+    }
+    todo.status = "finish";
+    todo.endTime = getNowTimeStr();
+    saveData();
+    renderTodoList();
+    return;
+  }
+  // 统计卡片点击筛选
+  if(target.classList.contains("stat-filter-card")){
+    const f = target.dataset.filter;
+    window._statFilter = (window._statFilter === f) ? "" : f; // 再点取消
+    renderTodoList();
+    return;
+  }
+  // 删除待办
+  if(target.classList.contains("btn-del-todo")){
+    const id = Number(target.dataset.id);
+    if(!confirm("确认删除这个待办？")) return;
+    data.todos = data.todos.filter(t=>Number(t.id)!==id);
+    saveData(); renderTodoList();
+    return;
+  }
+});
 document.addEventListener("change",function(e){
   const t = e.target;
   if(t.classList.contains("perm-checkbox")){
@@ -437,103 +524,144 @@ document.addEventListener("change",function(e){
     saveUserPerm(un,pk,t.checked);
     renderMemberList();
   }
-})
-//快捷键
+});
 document.addEventListener("keydown",e=>{
   if(e.altKey && e.key.toLowerCase()==="s"){e.preventDefault();const el=document.getElementById("todo-start");if(el)el.value=getNowTimeStr();}
   if(e.altKey && e.key.toLowerCase()==="e"){e.preventDefault();const el=document.getElementById("todo-end");if(el)el.value=getNowTimeStr();}
-  //登录回车登录
   if(e.key === "Enter"){
     const loginPage = document.getElementById("page-login");
-    if(!loginPage.classList.contains("hidden")){
-      login();
-    }
+    if(!loginPage.classList.contains("hidden")) login();
   }
-})
-//【登录按钮绑定】
-const loginBtn = document.getElementById("login-btn");
-loginBtn.onclick = login;
-//大类搜索下拉
-document.getElementById("category-combo-input").oninput = function(){
-  const kw = this.value.trim();
-  renderCategoryDropdown(kw);
+});
+
+// ============ 工作事项选择 ============
+// 模板31个工作项，row对应Excel行号
+const WORK_ITEMS = [
+  {group:"一、出具加盟店账单相关", row:3, name:"调账、合同维护"},
+  {group:"一、出具加盟店账单相关", row:4, name:"各项费用的导入（差旅/税点/佣金等）"},
+  {group:"一、出具加盟店账单相关", row:5, name:"费用计算表差异及上浮统计"},
+  {group:"一、出具加盟店账单相关", row:6, name:"出账单其他工作（总控/分析/汇报/月结等）"},
+  {group:"二、与中介及合作方的结算", row:7, name:"中介佣金/合作方返点结算"},
+  {group:"三、加盟店的日常处理", row:8, name:"加盟店沟通（发票/催款/对账/差异单）"},
+  {group:"三、加盟店的日常处理", row:9, name:"加盟店回款情况维护"},
+  {group:"三、加盟店的日常处理", row:10, name:"其他日常（会员卡激活/开票）"},
+  {group:"三、加盟店的日常处理", row:11, name:"催款函/解约账单/违约函制作"},
+  {group:"四、加盟店返款相关", row:12, name:"中央预付款"},
+  {group:"四、加盟店返款相关", row:13, name:"电子E卡"},
+  {group:"四、加盟店返款相关", row:14, name:"会员卡管理层奖励"},
+  {group:"四、加盟店返款相关", row:15, name:"TMC及携程礼品卡税点发票"},
+  {group:"四、加盟店返款相关", row:16, name:"其他返款（现金券提现/多打款退回）"},
+  {group:"五、加盟店价值结果统计", row:17, name:"加盟管理表（含抵扣登记检查）"},
+  {group:"五、加盟店价值结果统计", row:18, name:"未回款酒店统计/扣除表/绩效核对"},
+  {group:"五、加盟店价值结果统计", row:19, name:"店长工资数据统计"},
+  {group:"六、总账结账相关", row:20, name:"计提到账（含店长工资开票做账）"},
+  {group:"六、总账结账相关", row:21, name:"批量做账（E卡/奖励/预付款等）"},
+  {group:"六、总账结账相关", row:22, name:"金蝶差异修改及跟进"},
+  {group:"七、审计相关", row:23, name:"应收大表/OP数据/审计抽样/询证函"},
+  {group:"八、小组工作轮换", row:24, name:"收入核对"},
+  {group:"八、小组工作轮换", row:25, name:"转租户"},
+  {group:"八、小组工作轮换", row:26, name:"贷款催收"},
+  {group:"九、月度组内工作", row:27, name:"数据更新（应收表/逾期数据/佣金等）"},
+  {group:"九、月度组内工作", row:28, name:"中介订单查询/开票/值日/审核"},
+  {group:"九、月度组内工作", row:29, name:"系统对接/周报/共性问题跟进"},
+  {group:"九、月度组内工作", row:30, name:"带教与学习"},
+  {group:"九、月度组内工作", row:31, name:"会议（早晚会/员工大会/访谈等）"},
+  {group:"九、月度组内工作", row:32, name:"每日工作总结（填写、跟进）"},
+  {group:"九、月度组内工作", row:33, name:"其他事项（请详细备注）"},
+];
+
+let _selectedWorkItem = null; // {row, name}
+
+function setSelectedWorkItem(item){
+  _selectedWorkItem = item;
+  const textEl = document.getElementById("category-select-text");
+  const box = document.getElementById("category-select-box");
+  if(item){
+    textEl.textContent = item.name;
+    box.classList.remove("placeholder");
+  }else{
+    textEl.textContent = "请选择工作事项";
+    box.classList.add("placeholder");
+  }
 }
-//点击页面任意空白处自动收起下拉框
+
+function renderWorkItemDropdown(){
+  const comboDrop = document.getElementById("category-combo-dropdown");
+  let html = "";
+  let lastGroup = "";
+  WORK_ITEMS.forEach(item=>{
+    if(item.group !== lastGroup){
+      html += `<div style="padding:10px 14px 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">${esc(item.group)}</div>`;
+      lastGroup = item.group;
+    }
+    const selected = _selectedWorkItem && _selectedWorkItem.row === item.row;
+    html += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}">
+      <span>${esc(item.name)}</span>${selected?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}
+    </div>`;
+  });
+  comboDrop.innerHTML = html;
+  comboDrop.querySelectorAll(".combo-item[data-row]").forEach(el=>{
+    el.onclick = ()=>{
+      setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name});
+      comboDrop.classList.add("hidden");
+    };
+  });
+  comboDrop.classList.remove("hidden");
+}
+
+document.getElementById("category-select-box").onclick = function(){
+  const drop = document.getElementById("category-combo-dropdown");
+  if(drop.classList.contains("hidden")) renderWorkItemDropdown();
+  else drop.classList.add("hidden");
+};
 document.addEventListener("click",function(e){
   const comboWrap = document.querySelector(".combo-wrap");
   const comboDrop = document.getElementById("category-combo-dropdown");
-  if(comboDrop && !comboWrap.contains(e.target)){
-    comboDrop.classList.add("hidden");
-  }
+  if(comboDrop && !comboWrap.contains(e.target)) comboDrop.classList.add("hidden");
 });
-function renderCategoryDropdown(keyword){
-  const comboInput = document.getElementById("category-combo-input");
-  const comboDrop = document.getElementById("category-combo-dropdown");
-  comboDrop.classList.remove("hidden");
-  let list = data.categories.filter(x=>x.name.includes(keyword));
-  let html="";
-  list.forEach(c=>html +=`<div class="combo-item" data-catname="${c.name}">${c.name}</div>`)
-  if(list.length===0)html+=`<div class="combo-item">无匹配大类，直接输入创建新大类</div>`;
-  comboDrop.innerHTML=html;
-  document.querySelectorAll(".combo-item[data-catname]").forEach(el=>{
-    el.onclick=()=>{
-      comboInput.value = el.dataset.catname;
-      comboDrop.classList.add("hidden");
-    }
-  })
-}
-//保存AI配置
-document.getElementById("btn-save-ai-config").onclick = saveAIConfig;
-function saveAIConfig(){
-  if(!currentUser.isAdmin){alert("仅管理员可配置AI");return;}
-  const baseUrl = document.getElementById("ai-base-url").value.trim();
-  const apiKey = document.getElementById("ai-api-key").value.trim();
-  const model = document.getElementById("ai-model").value.trim();
-  if(!baseUrl || !apiKey || !model){
-    alert("请完整填写AI接口地址、API Key和模型名称");
-    return;
-  }
-  data.aiConfig = {baseUrl, apiKey, model};
-  saveData();
-  alert("✅AI配置保存成功，现在可以用AI优化备注了");
-}
-//AI
+
+// ============ AI 优化备注 ============
 async function aiImproveNote(){
-  //直接硬编码配置，不依赖全局data
-  const aiConfig = {
-    baseUrl:"https://api.siliconflow.cn/v1",
-    apiKey:"sk-ivexkzsvdyyqaaupncxfzghfvlcnmylcytojbigpdkdtpyac",
-    model:"Qwen/Qwen2.5-7B-Instruct"
-  };
   const inp = document.getElementById("todo-note");
   const txt = inp.value.trim();
-  if(!txt){alert("请输入备注草稿");return;}
-  //按钮变加载状态
+  if(!txt){ alert("请输入备注草稿"); return; }
   const btn = document.getElementById("btn-ai-note");
   const oldText = btn.innerHTML;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI生成中...';
   btn.disabled = true;
   try{
-    const resp = await fetch(`${aiConfig.baseUrl}/chat/completions`,{
+    const resp = await fetch(`${data.aiConfig.baseUrl}/chat/completions`,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":`Bearer ${aiConfig.apiKey}`
-      },
-      body:JSON.stringify({
-        model: aiConfig.model,
+      headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${data.aiConfig.apiKey}` },
+        body:JSON.stringify({
+        model: data.aiConfig.model,
         messages:[
-          {role:"system", content:"你是资深职场秘书，专门把员工随手记的零散工作草稿，重写成正式、通顺、逻辑清晰的工作汇报文字：1. 把口语化、零散的短句整理成连贯的书面表达；2. 梳理清楚每件事的动作和结果，突出工作产出；3. 绝对不能只改标点符号，必须重组语言、理顺逻辑；4. 不改变原意，不添加虚构内容，不删减核心信息；5. 直接输出优化后的最终文本，不要任何解释。"},
+          {role:"system", content:`你是一名资深财务主管，专门把会计随手记的工作流水，重写成正式、专业、可直接交给领导看的日报工作描述。
+
+【重写规则】
+1. 把口语化流水账改成书面语，突出"做了什么+结果如何"，不要只改标点
+2. 主动补充逻辑连接词，让前后动作连贯（如"先后完成""针对...问题""经核对"）
+3. 把零散事项合并归类，同类工作用一句话概括，不要逐条罗列
+4. 用专业财务术语（如"账务核对""结算流程""数据校验""异常处理"），但不要生造
+5. 不添加不存在的事实，不夸大成果，不改变原意
+6. 字数控制在80-200字之间，一段话写完，不要分点
+7. 直接输出重写后的文本，不要任何解释、不要"优化如下"之类的话
+
+【示例】
+草稿：今天调了格林酒店的账，又录了几个新合同，然后导出了费用计算表看差异，有几家不对，我改了
+重写：完成加盟店账务调整及合同录入维护工作，同步导出费用计算表进行差异核对，针对发现的异常数据逐项修正，确保账务数据准确。
+
+草稿：催了几家酒店回款，打了电话也发了消息，还有两笔没回
+重写：跟进加盟店回款进度，通过电话及消息方式催促未回款酒店，目前仍有两笔款项待跟进，已记录并安排次日继续催收。`},
           {role:"user", content: txt}
         ],
-        temperature: 0.3
+        temperature: 0.7,
+        max_tokens: 500
       })
     });
     const result = await resp.json();
     if(result.choices && result.choices[0] && result.choices[0].message){
-      const optimized = result.choices[0].message.content.trim();
-      //弹出对比弹窗，不直接覆盖原草稿
-      showAiOptimizeModal(txt, optimized, inp);
+      showAiOptimizeModal(txt, result.choices[0].message.content.trim(), inp);
     }else{
       alert("❌AI返回结果异常："+JSON.stringify(result));
     }
@@ -544,9 +672,7 @@ async function aiImproveNote(){
     btn.disabled = false;
   }
 }
-//AI优化对比弹窗
 function showAiOptimizeModal(originalText, optimizedText, inpEl){
-  //创建弹窗
   const oldModal = document.getElementById("aiOptimizeModal");
   if(oldModal) oldModal.remove();
   const modal = document.createElement("div");
@@ -558,85 +684,185 @@ function showAiOptimizeModal(originalText, optimizedText, inpEl){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
         <div>
           <label style="font-size:13px;color:#64748b;margin-bottom:6px;display:block">优化前草稿</label>
-          <div style="background:#f8fafc;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto">${originalText}</div>
+          <div style="background:#f8fafc;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto"></div>
         </div>
         <div>
           <label style="font-size:13px;color:#6366f1;margin-bottom:6px;display:block">AI优化后结果</label>
-          <div style="background:#eef2ff;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto">${optimizedText}</div>
+          <div style="background:#eef2ff;padding:14px;border-radius:12px;white-space:pre-wrap;line-height:1.7;font-size:14px;max-height:300px;overflow-y:auto"></div>
         </div>
       </div>
       <div style="text-align:right;margin-top:16px">
-        <button class="btn-gray" onclick="document.getElementById('aiOptimizeModal').remove()">保留原草稿</button>
-        <button class="btn-purple" onclick="document.getElementById('aiOptimizeModal').remove();document.getElementById('btn-ai-note').click()"><i class="fa-solid fa-rotate"></i> 再优化一次</button>
-        <button class="btn-success" onclick="applyOptimizeResult('${optimizedText.replace(/'/g, "\\'")}')"><i class="fa-solid fa-check"></i> 用这个优化结果</button>
+        <button class="btn-gray act-keep">保留原草稿</button>
+        <button class="btn-purple act-regen"><i class="fa-solid fa-rotate"></i> 再优化一次</button>
+        <button class="btn-success act-apply"><i class="fa-solid fa-check"></i> 用这个优化结果</button>
       </div>
-    </div>
-  `;
+    </div>`;
+  // 用 textContent 赋值，避免任何特殊字符破坏 HTML/JS
+  const [beforeDiv, afterDiv] = modal.querySelectorAll(".modal-box > div > div > div");
+  beforeDiv.textContent = originalText;
+  afterDiv.textContent = optimizedText;
+  modal.querySelector(".act-keep").onclick = ()=>modal.remove();
+  modal.querySelector(".act-regen").onclick = ()=>{ modal.remove(); aiImproveNote(); };
+  modal.querySelector(".act-apply").onclick = ()=>{
+    inpEl.value = optimizedText;
+    modal.remove();
+  };
   document.body.appendChild(modal);
-  window._currentInpEl = inpEl;
 }
-function applyOptimizeResult(text){
-  window._currentInpEl.value = text;
-  document.getElementById("aiOptimizeModal").remove();
-  alert("✅已应用优化后的备注");
-}
-async function generateReport(){
-  const title = document.getElementById("todo-title").value.trim();
-  const category = document.getElementById("category-combo-input").value.trim();
+
+// ============ 生成日报文本 ============
+function generateReport(){
+  const category = _selectedWorkItem ? _selectedWorkItem.name : "";
+  const title = category; // 自动用工作项名作为待办标题
+  const workRow = _selectedWorkItem ? _selectedWorkItem.row : null;
   const priSel = document.getElementById("todo-priority");
   const priText = priSel.value==="high"?"🔴高优先级":priSel.value==="mid"?"🟠中优先级":"🟢低优先级";
   const note = document.getElementById("todo-note").value.trim();
-  const st = document.getElementById("todo-start").value.trim();
+  let st = document.getElementById("todo-start").value.trim();
+  if(!st && !window._editingTodoId && status === "doing") st = getNowTimeStr(); // 只有"进行中"才自动填开始时间
   const et = document.getElementById("todo-end").value.trim();
   let useMin = null;
-  if(st && et){
-    const t1=new Date(st),t2=new Date(et);
-    if(!isNaN(t1.getTime())&&!isNaN(t2.getTime())) useMin = Math.round((t2-t1)/60000);
-  }
-  if(!note){alert("备注不能为空");return;}
+  const t1=parseTime(st), t2=parseTime(et);
+  if(!isNaN(t1)&&!isNaN(t2)) useMin = Math.round((t2-t1)/60000);
+  if(!note){ alert("备注不能为空"); return; }
   const res = `【${category}】${title}（${priText}）
 本次工作内容：${note}。
 工作执行时间段${st||"无起始时间记录"}至${et||"无结束时间记录"}，总耗时${useMin?useMin+"分钟":"暂未统计"}。该项工作已按要求落地完成，顺利达成本次任务目标。`;
   const out = document.getElementById("ai-output");
-  out.innerText = res;out.classList.remove("hidden");
+  out.innerText = res;
+  out.classList.remove("hidden");
 }
-//登录逻辑
+
+// ============ 登录/登出 ============
 async function login(){
-  //登录前强制拉取最新云端数据，确保新注册的成员能登录
-  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
-    await fetchCloudData();
-  }
+  if(data.cloudConfig?.binId && data.cloudConfig?.apiKey) await fetchCloudData();
   const un = document.getElementById("login-user").value.trim();
   const pw = document.getElementById("login-pwd").value.trim();
   const tip = document.getElementById("login-tip");
   tip.innerText="";
-  if(!un||!pw){tip.innerText="账号密码不能为空";return;}
+  if(!un||!pw){ tip.innerText="账号密码不能为空"; return; }
   const user = data.users.find(u=>u.username===un && u.pwd===pw);
-  if(!user){tip.innerText="账号或密码错误";return;}
+  if(!user){ tip.innerText="账号或密码错误"; return; }
   currentUser = user;
   if(!currentUser.permissions) currentUser.permissions = {};
   localStorage.setItem("_logged_user", un);
   showMainPage();
 }
-//动态渲染顶部标签
+function logout(){
+  currentUser=null;
+  localStorage.removeItem("_logged_user");
+  document.getElementById("page-main").classList.add("hidden");
+  document.getElementById("page-login").classList.remove("hidden");
+  document.getElementById("login-user").value="";
+  document.getElementById("login-pwd").value="";
+}
+
+// ============ 注册 ============
+function showRegisterModal(){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay show";
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:400px;border-radius:16px;padding:28px;background:#fff">
+      <div style="text-align:center;margin-bottom:20px">
+        <h3 style="margin:0;color:#0f172a;font-size:20px;font-weight:700">注册账号</h3>
+        <p style="margin:6px 0 0;color:#64748b;font-size:13px">创建你的一页清单账号</p>
+      </div>
+      <div class="form-item">
+        <label><i class="fa-regular fa-user"></i> 账号（至少2个中文字）</label>
+        <input id="reg-user" placeholder="请输入中文账号名，如：张三">
+      </div>
+      <div class="form-item">
+        <label><i class="fa-solid fa-lock"></i> 密码</label>
+        <input id="reg-pwd" type="password" placeholder="请设置密码">
+      </div>
+      <div class="form-item">
+        <label><i class="fa-regular fa-envelope"></i> 邮箱</label>
+        <input id="reg-email" type="email" placeholder="请输入邮箱地址">
+      </div>
+      <div id="reg-tip" style="color:#dc2626;font-size:13px;margin:8px 0;min-height:18px"></div>
+      <button id="reg-btn" class="btn-primary" style="width:100%;justify-content:center">
+        <i class="fa-solid fa-user-plus"></i> 注册并登录
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:#64748b">
+        已有账号？<a href="javascript:void(0)" id="reg-back-login" style="color:#6366f1;font-weight:600;cursor:pointer">返回登录</a>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#reg-back-login").onclick = ()=>overlay.remove();
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+  overlay.querySelector("#reg-btn").onclick = doRegister;
+}
+
+async function doRegister(){
+  const un = document.getElementById("reg-user").value.trim();
+  const pw = document.getElementById("reg-pwd").value.trim();
+  const em = document.getElementById("reg-email").value.trim();
+  const tip = document.getElementById("reg-tip");
+  tip.innerText = "";
+
+  // 校验账号：至少2个中文字
+  if(!/^[\u4e00-\u9fa5]{2,}$/.test(un)){
+    tip.innerText = "账号必须是至少2个中文字（如：张三）";
+    return;
+  }
+  // 密码
+  if(!pw || pw.length < 4){
+    tip.innerText = "密码不能少于4位";
+    return;
+  }
+  // 邮箱格式
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){
+    tip.innerText = "邮箱格式不正确";
+    return;
+  }
+  // 账号是否已存在
+  if(data.users.find(u=>u.username===un)){
+    tip.innerText = "该账号已被注册";
+    return;
+  }
+
+  // 创建新用户
+  const newUser = {
+    username: un,
+    pwd: pw,
+    email: em,
+    isAdmin: false,
+    permissions: {},
+    createdAt: new Date().toISOString()
+  };
+  data.users.push(newUser);
+  await saveData();
+
+  // 自动发欢迎邮件
+  if(data.mailConfig?.publicKey && em){
+    try{
+      emailjs.send(data.mailConfig.serviceId || "YinYifei021011", "template_jftljpv", {
+        to_email: em,
+        to_name: un,
+        title: "欢迎使用一页清单",
+        content: `欢迎 ${un} 加入一页清单！\n你的账号已注册成功，账号：${un}\n请妥善保管密码。`
+      }).catch(()=>{});
+    }catch(e){}
+  }
+
+  // 自动登录
+  currentUser = newUser;
+  if(!currentUser.permissions) currentUser.permissions = {};
+  localStorage.setItem("_logged_user", un);
+  document.querySelectorAll(".modal-overlay").forEach(m=>m.remove());
+  showMainPage();
+}
+
+// ============ Tab 切换 ============
 function renderTabs(){
   const container = document.getElementById("tabBarContainer");
   let tabHtml = `<div class="tab active" data-tab="todo"><i class="fa-solid fa-list-check"></i> 我的待办</div>`;
   tabHtml += `<div class="tab" data-tab="info"><i class="fa-solid fa-user-gear"></i> 个人设置</div>`;
-  if(hasPermission(PERM.viewAllTodo)){
-    tabHtml += `<div class="tab" data-tab="alltodo"><i class="fa-solid fa-users-line"></i> 全员任务</div>`;
-  }
-  if(hasPermission(PERM.manageCategory)){
-    tabHtml += `<div class="tab" data-tab="category"><i class="fa-solid fa-folder-tree"></i> 大类管理</div>`;
-  }
-  if(hasPermission(PERM.manageMember)){
-    tabHtml += `<div class="tab" data-tab="member"><i class="fa-solid fa-users"></i> 成员管理</div>`;
-  }
-  if(hasPermission(PERM.viewMailLog)){
-    tabHtml += `<div class="tab" data-tab="maillog"><i class="fa-solid fa-envelope"></i> 邮件日志</div>`;
-  }
-  const logoutBtn = `<button id="logout-btn" class="btn-gray"><i class="fa-solid fa-right-from-bracket"></i> 退出登录</button>`
-  container.innerHTML = tabHtml + logoutBtn;
+  if(hasPermission(PERM.viewAllTodo)) tabHtml += `<div class="tab" data-tab="alltodo"><i class="fa-solid fa-users-line"></i> 全员任务</div>`;
+  if(hasPermission(PERM.manageCategory)) tabHtml += `<div class="tab" data-tab="category"><i class="fa-solid fa-folder-tree"></i> 大类管理</div>`;
+  if(hasPermission(PERM.manageMember)) tabHtml += `<div class="tab" data-tab="member"><i class="fa-solid fa-users"></i> 成员管理</div>`;
+  if(hasPermission(PERM.viewMailLog)) tabHtml += `<div class="tab" data-tab="maillog"><i class="fa-solid fa-envelope"></i> 邮件日志</div>`;
+  container.innerHTML = tabHtml + `<button id="logout-btn" class="btn-gray"><i class="fa-solid fa-right-from-bracket"></i> 退出登录</button>`;
   document.getElementById("logout-btn").onclick = logout;
 }
 function switchTab(tabName){
@@ -647,261 +873,274 @@ function switchTab(tabName){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   const activeTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
   if(activeTab) activeTab.classList.add("active");
-  const permMap = {
-    alltodo:PERM.viewAllTodo,
-    category:PERM.manageCategory,
-    member:PERM.manageMember,
-    maillog:PERM.viewMailLog
-  }
+  const permMap = { alltodo:PERM.viewAllTodo, category:PERM.manageCategory, member:PERM.manageMember, maillog:PERM.viewMailLog };
   if(permMap[tabName] && !hasPermission(permMap[tabName])){
-    alert("❌您没有权限访问该页面");
-    switchTab("todo");
-    return;
+    alert("❌您没有权限访问该页面"); switchTab("todo"); return;
   }
-  if(tabName==="category")renderCategoryList();
+  if(tabName==="category") renderCategoryList();
   if(tabName==="member") renderMemberList();
-  if(tabName==="maillog")renderMailLog();
-  if(tabName==="todo")renderTodoList();
+  if(tabName==="maillog") renderMailLog();
+  if(tabName==="todo") renderTodoList();
   if(tabName==="alltodo") renderAllTodo();
-  //切换到个人设置tab，加载管理员邮件下拉
   if(tabName === "info"){
-    //加载用户自己的邮箱
     document.getElementById("user-email").value = currentUser.email || "";
-    //管理员专属模块
-    if(currentUser.isAdmin){
-      document.getElementById("adminMailBlock").style.display="block";
-      document.getElementById("mailConfigBlock").style.display="block";
-      document.getElementById("mailConfigTitle").style.display="block";
-      document.getElementById("backupBlock").style.display="block";
-      document.getElementById("backupTitle").style.display="block";
-      document.getElementById("aiConfigBlock").style.display="block";
-      document.getElementById("aiConfigTitle").style.display="block";
-      //加载已保存的发件配置
-      document.getElementById("emailjs-service-id").value = data.mailConfig?.serviceId || "";
-      document.getElementById("emailjs-template-id").value = data.mailConfig?.templateId || "";
-      document.getElementById("emailjs-public-key").value = data.mailConfig?.publicKey || "";
-      //加载已保存的AI配置
-      document.getElementById("ai-base-url").value = data.aiConfig?.baseUrl || "";
-      document.getElementById("ai-api-key").value = data.aiConfig?.apiKey || "";
-      document.getElementById("ai-model").value = data.aiConfig?.model || "";
-      renderAdminMailSelect();
-    }else{
-      document.getElementById("adminMailBlock").style.display="none";
-      document.getElementById("mailConfigBlock").style.display="none";
-      document.getElementById("mailConfigTitle").style.display="none";
-      document.getElementById("backupBlock").style.display="none";
-      document.getElementById("backupTitle").style.display="none";
-      document.getElementById("aiConfigBlock").style.display="none";
-      document.getElementById("aiConfigTitle").style.display="none";
-    }
-    //有发邮件权限的用户才显示测试邮件按钮
-    if(hasPermission(PERM.sendMail)){
-      document.getElementById("testMailBlock").style.display="block";
-    }else{
-      document.getElementById("testMailBlock").style.display="none";
-    }
+    document.getElementById("adminMailBlock").style.display = currentUser.isAdmin ? "block" : "none";
+    document.getElementById("backupBlock").style.display = currentUser.isAdmin ? "block" : "none";
+    document.getElementById("backupTitle").style.display = currentUser.isAdmin ? "block" : "none";
+    document.getElementById("testMailBlock").style.display = hasPermission(PERM.sendMail) ? "block" : "none";
+    if(currentUser.isAdmin) renderAdminMailSelect();
   }
 }
-//管理员发送邮件：加载成员下拉
+
+// ============ 管理员邮件 ============
 function renderAdminMailSelect(){
   const sel = document.getElementById("selectMemberForMail");
   sel.innerHTML = "";
   const normalUsers = data.users.filter(u=>!u.isAdmin);
   normalUsers.forEach(u=>{
-    sel.innerHTML += `<option value="${u.username}">${u.username}【邮箱：${u.email||"未绑定邮箱"}】</option>`
-  })
-  //选择成员后自动生成待办邮件内容
+    sel.innerHTML += `<option value="${esc(u.username)}">${esc(u.username)}【邮箱：${esc(u.email||"未绑定邮箱")}】</option>`;
+  });
   sel.onchange = function(){
     const selectedUser = this.value;
     if(!selectedUser) return;
-    //生成该成员的待办汇总
     const userTodos = data.todos.filter(t=>t.assignTo === selectedUser);
     const waitTodos = userTodos.filter(t=>t.status === "wait");
     const doingTodos = userTodos.filter(t=>t.status === "doing");
     const finishTodos = userTodos.filter(t=>t.status === "finish");
     let mailContent = `您好 ${selectedUser}：\n\n您当前的待办任务汇总如下：\n\n`;
-    if(waitTodos.length > 0){
+    const fmtP = p => p==="high"?"高优先级":p==="mid"?"中优先级":"低优先级";
+    if(waitTodos.length){
       mailContent += `【未开始（${waitTodos.length}项）】\n`;
-      waitTodos.forEach((t,i)=>{
-        mailContent += `${i+1}. [${t.category}] ${t.title}（${t.priority==="high"?"高优先级":t.priority==="mid"?"中优先级":"低优先级"}）\n`;
-      });
+      waitTodos.forEach((t,i)=>{ mailContent += `${i+1}. [${t.category}] ${t.title}（${fmtP(t.priority)}）\n`; });
       mailContent += "\n";
     }
-    if(doingTodos.length > 0){
+    if(doingTodos.length){
       mailContent += `【进行中（${doingTodos.length}项）】\n`;
-      doingTodos.forEach((t,i)=>{
-        mailContent += `${i+1}. [${t.category}] ${t.title}（${t.priority==="high"?"高优先级":t.priority==="mid"?"中优先级":"低优先级"}）\n`;
-      });
+      doingTodos.forEach((t,i)=>{ mailContent += `${i+1}. [${t.category}] ${t.title}（${fmtP(t.priority)}）\n`; });
       mailContent += "\n";
     }
-    if(finishTodos.length > 0){
+    if(finishTodos.length){
       mailContent += `【已完成（${finishTodos.length}项）】\n`;
-      finishTodos.forEach((t,i)=>{
-        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
-      });
+      finishTodos.forEach((t,i)=>{ mailContent += `${i+1}. [${t.category}] ${t.title}\n`; });
       mailContent += "\n";
     }
-    if(userTodos.length === 0){
-      mailContent += "您当前暂无待办任务。\n\n";
-    }
-    mailContent += "请及时跟进未完成任务，如有问题请联系管理员。\n—— 逸想待办系统自动发送";
+    if(!userTodos.length) mailContent += "您当前暂无待办任务。\n\n";
+    mailContent += "请及时跟进未完成任务，如有问题请联系管理员。\n—— 一页清单系统自动发送";
     document.getElementById("adminMailContent").value = mailContent;
   };
 }
+
+// ============ 主页面 ============
 function showMainPage(){
   document.getElementById("page-login").classList.add("hidden");
   document.getElementById("page-main").classList.remove("hidden");
+
+  // 登录后弹出当天高优先级未完成待办
+  setTimeout(()=>{
+    const todayStr = new Date().toLocaleDateString("zh-CN").replace(/\//g,"/");
+    const todayTodos = data.todos.filter(t=>{
+      if(t.assignTo !== currentUser.username) return false;
+      if(t.status === "finish") return false;
+      return true;
+    });
+    if(todayTodos.length){
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay show";
+      overlay.innerHTML = `
+        <div class="modal-box" style="max-width:480px;border-radius:20px;padding:24px;background:#fff">
+          <div style="text-align:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #f1f5f9">
+            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:4px">
+              <i class="fa-solid fa-calendar-check" style="font-size:20px;color:#6366f1"></i>
+              <h3 style="margin:0;color:#0f172a;font-size:18px;font-weight:700">今日待办清单</h3>
+            </div>
+            <p style="margin:0;color:#64748b;font-size:13px">共 <span style="font-weight:700;color:#6366f1">${todayTodos.length}</span> 项未完成任务</p>
+          </div>
+          ${[
+            {label:"高优先级", color:"#ef4444", bg:"#fef2f2", border:"#fecaca", items: todayTodos.filter(t=>t.priority==="high")},
+            {label:"中优先级", color:"#f97316", bg:"#fff7ed", border:"#fed7aa", items: todayTodos.filter(t=>t.priority==="mid")},
+            {label:"低优先级", color:"#22c55e", bg:"#f0fdf4", border:"#bbf7d0", items: todayTodos.filter(t=>t.priority==="low")}
+          ].filter(col=>col.items.length > 0).map(col=>`
+            <div style="background:${col.bg};border:1px solid ${col.border};border-radius:16px;padding:16px;margin-bottom:14px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+                  <i class="fa-solid ${col.label==='高优先级'?'fa-fire':col.label==='中优先级'?'fa-circle-dot':'fa-circle'}" style="font-size:14px;color:${col.color}"></i>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:${col.color}">${col.label}待办</div>
+                  <div style="font-size:12px;color:${col.color};opacity:0.8">${col.items.length} 项未完成</div>
+                </div>
+              </div>
+              ${col.items.map(t=>{
+                const isOD = isItemOverdue(t);
+                return `<div style="background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#334155;display:flex;align-items:center;gap:8px">
+                  <i class="fa-solid fa-circle" style="font-size:6px;color:${col.color}"></i>
+                  <span style="flex:1">${esc(t.category)}</span>
+                  ${isOD?'<span style="font-size:11px;color:#dc2626;font-weight:600">已逾期</span>':''}
+                </div>`;
+              }).join("")}
+            </div>
+          `).join("")}
+          <button class="btn-primary act-ok" style="width:100%;justify-content:center;margin:0">开始工作</button>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.querySelector(".act-ok").onclick = ()=>overlay.remove();
+      overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+    }
+  }, 500);
   document.getElementById("user-info").style.display="flex";
   document.getElementById("user-name").innerText = currentUser.username;
-  document.getElementById("user-avatar").innerText = currentUser.username.charAt(0);
-  //如果已保存EmailJS配置，自动初始化
-  if(data.mailConfig?.publicKey){
-    emailjs.init(data.mailConfig.publicKey);
-  }
+  document.getElementById("user-avatar").innerText = currentUser.username.charAt(0).toUpperCase();
+  if(data.mailConfig?.publicKey) emailjs.init(data.mailConfig.publicKey);
   renderTabs();
   if(currentUser.isAdmin){
     document.getElementById("assign-wrap").style.display="block";
-    renderMemberList();
     const sel = document.getElementById("assign-user");
     sel.innerHTML = `<option value="">给自己</option><option value="__all__">全部普通成员</option>`;
-    data.users.filter(u=>!u.isAdmin).forEach(m=>sel.innerHTML += `<option value="${m.username}">${m.username}</option>`)
+    data.users.filter(u=>!u.isAdmin).forEach(m=>{ sel.innerHTML += `<option value="${esc(m.username)}">${esc(m.username)}</option>`; });
+    renderMemberList();
+    renderAdminMailSelect();
   }else{
     document.getElementById("assign-wrap").style.display="none";
   }
   renderCategoryList();
   renderTodoList();
-  //自动加载管理员发邮件的成员下拉列表
-  if(currentUser.isAdmin){
-    renderAdminMailSelect();
+}
+
+// ============ 新增/编辑待办 ============
+function fillFormForEdit(todo){
+  window._editingTodoId = Number(todo.id);
+  if(todo.workRow){
+    const item = WORK_ITEMS.find(w=>w.row===todo.workRow);
+    setSelectedWorkItem(item || {row:todo.workRow, name:todo.category});
+  }else{
+    setSelectedWorkItem(null);
   }
+  document.getElementById("todo-priority").value = todo.priority;
+  document.getElementById("todo-status").value = todo.status;
+  document.getElementById("todo-note").value = todo.note || "";
+  document.getElementById("todo-start").value = todo.startTime || "";
+  document.getElementById("todo-end").value = todo.endTime || "";
+  document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 保存修改';
+  document.getElementById("edit-banner").classList.remove("hidden");
+  window.scrollTo({top:0, behavior:"smooth"});
 }
-function logout(){
-  currentUser=null;
-  localStorage.removeItem("_logged_user");
-  document.getElementById("page-main").classList.add("hidden");
-  document.getElementById("page-login").classList.remove("hidden");
-  document.getElementById("login-user").value="";
-  document.getElementById("login-pwd").value="";
+function cancelEdit(){
+  window._editingTodoId = null;
+  document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-plus"></i> 添加待办记录';
+  document.getElementById("edit-banner").classList.add("hidden");
+  ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
+  setSelectedWorkItem(null);
 }
-//新增待办
-document.getElementById("btn-add-todo").onclick = addTodo;
+document.getElementById("btn-cancel-edit").onclick = cancelEdit;
+
 function addTodo(){
-  const title = document.getElementById("todo-title").value.trim();
-  const category = document.getElementById("category-combo-input").value.trim();
+  const category = _selectedWorkItem ? _selectedWorkItem.name : "";
+  const title = category; // 自动用工作项名作为待办标题
+  const workRow = _selectedWorkItem ? _selectedWorkItem.row : null;
   const priority = document.getElementById("todo-priority").value;
   const status = document.getElementById("todo-status").value;
   const note = document.getElementById("todo-note").value.trim();
-  const st = document.getElementById("todo-start").value.trim();
+  let st = document.getElementById("todo-start").value.trim();
+  if(!st && !window._editingTodoId && status === "doing") st = getNowTimeStr(); // 只有"进行中"才自动填开始时间
   const et = document.getElementById("todo-end").value.trim();
-  let useMin = null;
   const assignTarget = document.getElementById("assign-user")?.value || "";
-  if(st && et){
-    const t1=new Date(st.replace(/\//g, "-")),t2=new Date(et.replace(/\//g, "-"));
-    if(t2<t1){alert("完成时间不能早于开始时间");return;}
-    if(!isNaN(t1.getTime())&&!isNaN(t2.getTime())) useMin = Math.round((t2-t1)/60000);
+  let useMin = null;
+  const t1=parseTime(st), t2=parseTime(et);
+  if(!isNaN(t1)&&!isNaN(t2)){
+    if(t2<t1){ alert("完成时间不能早于开始时间"); return; }
+    useMin = Math.round((t2-t1)/60000);
   }
-  if(!title){alert("待办名称不能为空");return;}
-  if(!category){alert("大类不能为空");return;}
-  if(!data.categories.find(c=>c.name===category)){
-    data.categories.push({name:category});
-  }
-  //编辑模式
+  if(!category){ alert("请选择工作事项"); return; }
+  
+  // 编辑模式
   if(window._editingTodoId){
-    const todo = data.todos.find(t=>t.id === window._editingTodoId);
+    const todo = data.todos.find(t=>Number(t.id)===window._editingTodoId);
     if(todo){
-      todo.title = title;
-      todo.category = category;
-      todo.priority = priority;
-      todo.status = status;
-      todo.note = note;
-      todo.startTime = st;
-      todo.endTime = et;
-      todo.useMin = useMin;
+      todo.title=title; todo.category=category; todo.priority=priority; todo.status=status;
+      todo.note=note; todo.startTime=st; todo.endTime=et; todo.useMin=useMin; todo.workRow=workRow;
       saveData();
       alert("✅待办修改已保存");
-      //重置回新增模式
-      window._editingTodoId = null;
-      document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-plus"></i> 添加待办记录';
-      //清空表单
-      document.getElementById("todo-title").value = "";
-      document.getElementById("todo-note").value = "";
-      document.getElementById("todo-start").value = "";
-      document.getElementById("todo-end").value = "";
+      cancelEdit();
       renderTodoList();
       return;
     }
   }
+  // 批量下发
   if(currentUser.isAdmin && assignTarget === "__all__"){
-    const members = data.users.filter(u=>!u.isAdmin);
-    members.forEach(m=>{
-      data.todos.push({
-        id:Date.now()+Math.random(),
-        createUser:currentUser.username,
-        assignTo:m.username,
-        title,category,priority,status,note,startTime:st,endTime:et,useMin
-      })
-    })
-    saveData();
-    alert("✅任务批量下发全部普通成员");
-    renderTodoList();
-    return;
+    data.users.filter(u=>!u.isAdmin).forEach(m=>{
+      data.todos.push({ id:genTodoId(), createUser:currentUser.username, assignTo:m.username, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
+    });
+    saveData(); alert("✅任务批量下发全部普通成员"); renderTodoList(); return;
   }
-  const assignTo = (currentUser.isAdmin && assignTarget && assignTarget !== "") ? assignTarget : currentUser.username;
-  data.todos.push({
-    id:Date.now()+Math.random(),
-    createUser:currentUser.username,
-    assignTo:assignTo,
-    title,category,priority,status,note,startTime:st,endTime:et,useMin
-  })
+  const assignTo = (currentUser.isAdmin && assignTarget) ? assignTarget : currentUser.username;
+  data.todos.push({ id:genTodoId(), createUser:currentUser.username, assignTo, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
   saveData();
   alert(`新增待办【${title}】`);
-  //清空表单
-  document.getElementById("todo-title").value = "";
-  document.getElementById("todo-note").value = "";
-  document.getElementById("todo-start").value = "";
-  document.getElementById("todo-end").value = "";
+  ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
+  setSelectedWorkItem(null);
   renderTodoList();
 }
-document.getElementById("btn-filter").onclick = reloadFilterTodo;
-document.getElementById("btn-reset-filter").onclick = resetFilter;
-function reloadFilterTodo(){
+document.getElementById("btn-add-todo").onclick = addTodo;
+
+// ============ 筛选 ============
+// 初始化工作项筛选下拉框
+(function initWorkItemFilter(){
+  const sel = document.getElementById("filter-category");
+  WORK_ITEMS.forEach(w=>{
+    sel.innerHTML += `<option value="${esc(w.name)}">${esc(w.name)}</option>`;
+  });
+})();
+
+document.getElementById("btn-filter").onclick = ()=>{
   filterStatusVal = document.getElementById("filter-status").value;
   filterCatVal = document.getElementById("filter-category").value;
   renderTodoList();
-}
-function resetFilter(){filterStatusVal="";filterCatVal="";renderTodoList();}
+};
+document.getElementById("btn-reset-filter").onclick = ()=>{
+  filterStatusVal=""; filterCatVal="";
+  document.getElementById("filter-status").value="";
+  renderTodoList();
+};
+
+// ============ 渲染待办列表 ============
 function renderTodoList(){
   const wrap = document.getElementById("todo-list");
   const summaryWrap = document.getElementById("summary-list");
-  const filterCatSelect = document.getElementById("filter-category");
-  filterCatSelect.innerHTML = `<option value="">全部大类</option>`;
-  data.categories.forEach(c=>filterCatSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`)
+
   let list = data.todos;
   if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)){
-    list = data.todos.filter(item=> item.assignTo === currentUser.username)
+    list = list.filter(item=>item.assignTo === currentUser.username);
   }
-  if(filterStatusVal) list = list.filter(x=>x.status===filterStatusVal);
+
+  const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+
+  // 下拉框筛选
+  if(filterStatusVal) list = list.filter(x=>{
+    if(filterStatusVal === "wait") return x.status === "wait";
+    if(filterStatusVal === "doing") return x.status === "doing";
+    if(filterStatusVal === "finish") return x.status === "finish";
+    if(filterStatusVal === "overdue") return isItemOverdue(x);
+    return true;
+  });
+  const filterPriorityVal = document.getElementById("filter-priority").value;
+  if(filterPriorityVal) list = list.filter(x=>x.priority===filterPriorityVal);
   if(filterCatVal) list = list.filter(x=>x.category===filterCatVal);
 
-  //计算统计数据
-  const now = new Date();
+  // 统计卡片点击筛选
+  if(window._statFilter === "finish") list = list.filter(x=>x.status==="finish");
+  if(window._statFilter === "doing") list = list.filter(x=>x.status==="doing" || x.status==="wait");
+  if(window._statFilter === "overdue") list = list.filter(x=>isItemOverdue(x));
+
   const totalCount = list.length;
   const finishCount = list.filter(x=>x.status==="finish").length;
   const doingCount = list.filter(x=>x.status==="doing" || x.status==="wait").length;
-  //逾期：有完成时间，且完成时间早于现在，且状态不是已完成
-  const overdueCount = list.filter(x=>{
-    if(x.status === "finish" || !x.endTime) return false;
-    const endTime = new Date(x.endTime.replace(/\//g, "-"));
-    return !isNaN(endTime.getTime()) && endTime < now;
-  }).length;
+  const overdueCount = list.filter(x=>isItemOverdue(x)).length;
 
-  let html="";
-  //统计卡片
-  html += `<div class="stat-row">
-    <div class="stat-card stat-total"><div class="label">总任务数</div><div class="num">${totalCount}</div></div>
-    <div class="stat-card stat-doing"><div class="label">待处理</div><div class="num">${doingCount}</div></div>
-    <div class="stat-card stat-finish"><div class="label">已完成</div><div class="num">${finishCount}</div></div>
-    <div class="stat-card stat-overdue"><div class="label">已逾期</div><div class="num">${overdueCount}</div></div>
+  let html = `<div class="stat-row">
+    <div class="stat-card stat-total stat-filter-card" data-filter="all" style="cursor:pointer"><div class="label">总任务数</div><div class="num">${totalCount}</div></div>
+    <div class="stat-card stat-doing stat-filter-card" data-filter="doing" style="cursor:pointer"><div class="label">待处理</div><div class="num">${doingCount}</div></div>
+    <div class="stat-card stat-finish stat-filter-card" data-filter="finish" style="cursor:pointer"><div class="label">已完成</div><div class="num">${finishCount}</div></div>
+    <div class="stat-card stat-overdue stat-filter-card" data-filter="overdue" style="cursor:pointer"><div class="label">已逾期</div><div class="num">${overdueCount}</div></div>
   </div>`;
 
   list.forEach(item=>{
@@ -910,144 +1149,95 @@ function renderTodoList(){
       :item.priority==="mid"
       ?'<span class="priority-mid"><i class="fa-solid fa-circle-minus"></i> 🟠 中优先级</span>'
       :'<span class="priority-low"><i class="fa-solid fa-circle-down"></i> 🟢 低优先级</span>';
-    let statusHtml="";
-    if(item.status==="wait") statusHtml = '<span class="status-wait"><i class="fa-solid fa-pause"></i> 未开始</span>';
-    if(item.status==="doing") statusHtml = '<span class="status-doing"><i class="fa-solid fa-play"></i> 进行中</span>';
-    if(item.status==="finish") statusHtml = '<span class="status-finish"><i class="fa-solid fa-check"></i> 已完成</span>';
-    //判断是否逾期
-    let isOverdue = false;
-    if(item.status !== "finish" && item.endTime){
-      const endTime = new Date(item.endTime.replace(/\//g, "-"));
-      if(!isNaN(endTime.getTime()) && endTime < now) isOverdue = true;
-    }
+    let statusHtml = item.status==="wait"
+      ?'<span class="status-wait"><i class="fa-solid fa-pause"></i> 未开始</span>'
+      :item.status==="doing"
+      ?'<span class="status-doing"><i class="fa-solid fa-play"></i> 进行中</span>'
+      :item.status==="paused"
+      ?'<span class="status-paused"><i class="fa-solid fa-pause"></i> 已暂停</span>'
+      :'<span class="status-finish"><i class="fa-solid fa-check"></i> 已完成</span>';
+    let isOverdue = isItemOverdue(item);
     html += `
     <div class="todo-item ${isOverdue?'overdue':''}">
       <div class="todo-title">
-        <strong>${item.title}</strong>${priHtml}${statusHtml}
-        <span class="category-tag"><i class="fa-solid fa-tag"></i> ${item.category}</span>
-        <span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${item.assignTo}</span>
+        <strong>${esc(item.title)}</strong>${priHtml}${statusHtml}
+        <span class="category-tag"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>
+        <span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${esc(item.assignTo)}</span>
       </div>
-      <div style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${item.note || ""}</div>
+      <div style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${esc(item.note || "")}</div>
       <div class="meta-row">
-        <span><i class="fa-regular fa-clock"></i> 开始：${item.startTime||"-"}</span>
-        <span><i class="fa-regular fa-clock"></i> 完成：${item.endTime||"-"}</span>
+        <span><i class="fa-regular fa-clock"></i> 开始：${esc(item.startTime||"-")}</span>
+        <span><i class="fa-regular fa-clock"></i> 完成：${esc(item.endTime||"-")}</span>
         <span><i class="fa-solid fa-hourglass-half"></i> 用时：${item.useMin ? item.useMin+"分钟":"-"}</span>
       </div>
       <div class="todo-actions">
-        <button class="btn-gray btn-edit-todo" onclick="editTodo(${item.id})"><i class="fa-solid fa-pen"></i> 编辑</button>
-        <button class="btn-danger btn-del-todo" onclick="delTodo(${item.id})"><i class="fa-solid fa-trash"></i> 删除</button>
+        ${item.status==="wait"?`<button class="btn-primary btn-start-todo" data-id="${item.id}"><i class="fa-solid fa-play"></i> 开始</button>`:""}
+        ${item.status==="doing"?`<button class="btn-warning btn-pause-todo" data-id="${item.id}"><i class="fa-solid fa-pause"></i> 暂停</button>`:""}
+        ${item.status==="doing"?`<button class="btn-success btn-complete-todo" data-id="${item.id}"><i class="fa-solid fa-check"></i> 完成</button>`:""}
+        ${item.status==="paused"?`<button class="btn-primary btn-resume-todo" data-id="${item.id}"><i class="fa-solid fa-play"></i> 继续</button>`:""}
+        ${item.status==="paused"?`<button class="btn-success btn-complete-todo" data-id="${item.id}"><i class="fa-solid fa-check"></i> 完成</button>`:""}
+        <button class="btn-gray btn-edit-todo" data-id="${item.id}"><i class="fa-solid fa-pen"></i> 编辑</button>
+        <button class="btn-danger btn-del-todo" data-id="${item.id}"><i class="fa-solid fa-trash"></i> 删除</button>
       </div>
-    </div>`
-  })
+    </div>`;
+  });
   wrap.innerHTML = html || "<div>暂无待办</div>";
 
-  //大类汇总
   const group = {};
   list.forEach(t=>{
-    if(!group[t.category]) group[t.category] = {count:0,totalMin:0,items:[]};
+    if(!group[t.category]) group[t.category] = {count:0,totalMin:0};
     group[t.category].count++;
     if(t.useMin) group[t.category].totalMin += t.useMin;
-    group[t.category].items.push(t);
-  })
-  let sumHtml="";
+  });
+  let sumHtml = "";
   Object.keys(group).forEach(cat=>{
-    sumHtml += `<div class="summary-group"><strong>${cat}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟</div>`
-  })
+    sumHtml += `<div class="summary-group"><strong>${esc(cat)}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟</div>`;
+  });
   summaryWrap.innerHTML = sumHtml || "<div>暂无数据汇总</div>";
 }
 
-//删除待办
-document.addEventListener("click",function(e){
-  if(e.target.classList.contains("btn-del-todo")){
-    const id = parseFloat(e.target.dataset.id);
-    if(!confirm("确认删除这个待办？")) return;
-    data.todos = data.todos.filter(t=>t.id !== id);
-    saveData();
-    renderTodoList();
-    alert("✅待办已删除");
-  }
-  if(e.target.classList.contains("btn-edit-todo")){
-    const id = parseFloat(e.target.dataset.id);
-    const todo = data.todos.find(t=>t.id === id);
-    if(!todo) return;
-    //把待办内容填充到上面的新增表单里，改成编辑模式
-    document.getElementById("todo-title").value = todo.title;
-    document.getElementById("category-combo-input").value = todo.category;
-    document.getElementById("todo-priority").value = todo.priority;
-    document.getElementById("todo-status").value = todo.status;
-    document.getElementById("todo-note").value = todo.note || "";
-    document.getElementById("todo-start").value = todo.startTime || "";
-    document.getElementById("todo-end").value = todo.endTime || "";
-    //把当前编辑的待办id存下来，点添加的时候改成更新
-    window._editingTodoId = id;
-    document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 保存修改';
-    window.scrollTo({top:0, behavior:"smooth"});
-  }
-})
+// ============ 全员任务 ============
 function renderAllTodo(){
   const wrap = document.getElementById("all-todo-list");
-  if(!hasPermission(PERM.viewAllTodo)){wrap.innerHTML="无权限";return;}
-  let html="";
+  if(!hasPermission(PERM.viewAllTodo)){ wrap.innerHTML="无权限"; return; }
+  let html = "";
   data.todos.forEach(item=>{
     html += `<div class="todo-item">
-      <div class="todo-title"><strong>${item.title}</strong><span class="category-tag">${item.category}</span><span>指派给:${item.assignTo}</span></div>
-      <div>备注：${item.note||""}</div>
-    </div>`
-  })
+      <div class="todo-title"><strong>${esc(item.title)}</strong><span class="category-tag">${esc(item.category)}</span><span>指派给:${esc(item.assignTo)}</span></div>
+      <div>备注：${esc(item.note||"")}</div>
+    </div>`;
+  });
   wrap.innerHTML = html || "暂无全员任务";
 }
-document.getElementById("btn-add-cat").onclick = addCategory;
-function addCategory(){
-  if(!hasPermission(PERM.manageCategory)){alert("无权限");return;}
+
+// ============ 大类管理 ============
+document.getElementById("btn-add-cat").onclick = ()=>{
+  if(!hasPermission(PERM.manageCategory)){ alert("无权限"); return; }
   const name = document.getElementById("new-category-name").value.trim();
-  if(!name){alert("大类名称不能为空");return;}
-  if(data.categories.find(c=>c.name===name)){alert("大类已存在");return;}
+  if(!name){ alert("大类名称不能为空"); return; }
+  if(data.categories.find(c=>c.name===name)){ alert("大类已存在"); return; }
   data.categories.push({name});
-  saveData();
-  renderCategoryList();
+  saveData(); renderCategoryList();
   document.getElementById("new-category-name").value="";
-}
-//全局删除待办函数
-function delTodo(id){
-  if(!confirm("确认删除这个待办？")) return;
-  data.todos = data.todos.filter(t=>t.id !== id);
-  saveData();
-  renderTodoList();
-  alert("✅待办已删除");
-}
-//全局编辑待办函数
-function editTodo(id){
-  const todo = data.todos.find(t=>t.id === id);
-  if(!todo) return;
-  document.getElementById("todo-title").value = todo.title;
-  document.getElementById("category-combo-input").value = todo.category;
-  document.getElementById("todo-priority").value = todo.priority;
-  document.getElementById("todo-status").value = todo.status;
-  document.getElementById("todo-note").value = todo.note;
-  document.getElementById("todo-start").value = todo.startTime||"";
-  document.getElementById("todo-end").value = todo.endTime||"";
-  window.scrollTo({top:0, behavior:"smooth"});
-}
+};
 function renderCategoryList(){
   const wrap = document.getElementById("category-list");
-  let html="";
-  data.categories.forEach(c=>{
-    html += `<div class="category-block"><span>${c.name}</span>${hasPermission(PERM.manageCategory)?`<button class="btn-danger btn-del-cat" data-catname="${c.name}">删除</button>`:""}</div>`
-  })
-  wrap.innerHTML = html;
+  wrap.innerHTML = data.categories.map(c=>
+    `<div class="category-block"><span>${esc(c.name)}</span>${hasPermission(PERM.manageCategory)?`<button class="btn-danger btn-del-cat" data-catname="${esc(c.name)}">删除</button>`:""}</div>`
+  ).join("");
 }
-//成员列表，权限改为下拉多选
+
+// ============ 成员管理 ============
 function renderMemberList(){
   const wrap = document.getElementById("member-list");
-  let html="";
+  let html = "";
   data.users.forEach(u=>{
     let permHtml = "";
     if(!u.isAdmin){
-      //已选中权限标签
       const selectedPerms = Object.entries(u.permissions).filter(([k,v])=>v).map(([k])=>permLabel[k]);
-      const tagHtml = selectedPerms.map(p=>`<span class="perm-tag">${p}</span>`).join("");
+      const tagHtml = selectedPerms.map(p=>`<span class="perm-tag">${esc(p)}</span>`).join("");
       const displayText = selectedPerms.length>0 ? tagHtml : "点击选择权限";
-      permHtml += `
+      permHtml = `
       <div class="perm-dropdown-wrap">
         <div class="perm-select-box">
           <div>${displayText}</div>
@@ -1057,23 +1247,21 @@ function renderMemberList(){
         ${Object.entries(PERM).map(([key,pKey])=>{
           const checked = u.permissions?.[pKey] ? "checked" : "";
           return `<div class="perm-item">
-            <input type="checkbox" class="perm-checkbox" data-user="${u.username}" data-perm="${pKey}" ${checked}>
-            <label>${permLabel[pKey]}</label>
-          </div>`
+            <input type="checkbox" class="perm-checkbox" data-user="${esc(u.username)}" data-perm="${pKey}" ${checked}>
+            <label>${esc(permLabel[pKey])}</label>
+          </div>`;
         }).join("")}
         </div>
       </div>`;
     }
     html += `<div class="category-block" style="flex-direction:column;align-items:flex-start">
       <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
-        <span>账号：${u.username} ${u.isAdmin?"【管理员】":"【普通成员】"}</span>
-        <div>
-          ${!u.isAdmin?`<button class="btn-danger btn-del-member" data-user="${u.username}">删除成员</button>`:""}
-        </div>
+        <span>账号：${esc(u.username)} ${u.isAdmin?"【管理员】":"【普通成员】"}</span>
+        <div>${!u.isAdmin?`<button class="btn-danger btn-del-member" data-user="${esc(u.username)}">删除成员</button>`:""}</div>
       </div>
       ${permHtml}
-    </div>`
-  })
+    </div>`;
+  });
   wrap.innerHTML = html;
 }
 function saveUserPerm(username, permKey, val){
@@ -1082,165 +1270,141 @@ function saveUserPerm(username, permKey, val){
   user.permissions[permKey] = val;
   saveData();
 }
-function renderMailLog(){
-  const wrap = document.getElementById("mail-log-list");
-  let html="";
-  data.mailLogs.forEach(log=>{
-    html += `<div class="log-item">【${log.time}】收件：${log.to}｜状态：${log.status}｜消息：${log.msg}</div>`
-  })
-  wrap.innerHTML = html || "暂无邮件日志";
-}
-document.getElementById("btn-add-member").onclick = addMember;
-function addMember(){
+document.getElementById("btn-add-member").onclick = ()=>{
   const un = document.getElementById("new-member-name").value.trim();
   const pw = document.getElementById("new-member-pwd").value.trim();
   const email = document.getElementById("new-member-email").value.trim();
-  const regChinese = /^[\u4e00-\u9fa5]{2,}$/;
-  const regEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!regChinese.test(un)){
-    alert("成员账号必须为**至少2个中文汉字**，仅支持汉字（示例：李明、王浩宇）");
-    return;
-  }
-  if(!pw){alert("请填写成员初始密码");return;}
-  if(!email){alert("请填写成员邮箱地址（必填）");return;}
-  if(!regEmail.test(email)){alert("邮箱格式不正确，请输入有效的邮箱地址（例如：name@example.com）");return;}
-  if(data.users.find(u=>u.username === un)){
-    alert("该账号已存在");return;
-  }
-  data.users.push({
-    username:un,
-    pwd:pw,
-    isAdmin:false,
-    email:email,
-    permissions:{}
-  });
+  if(!/^[\u4e00-\u9fa5]{2,}$/.test(un)){ alert("成员账号必须为至少2个中文汉字（示例：李明、王浩宇）"); return; }
+  if(!pw){ alert("请填写成员初始密码"); return; }
+  if(!email){ alert("请填写成员邮箱地址（必填）"); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert("邮箱格式不正确"); return; }
+  if(data.users.find(u=>u.username === un)){ alert("该账号已存在"); return; }
+  data.users.push({ username:un, pwd:pw, isAdmin:false, email, permissions:{} });
   saveData();
   alert(`✅成员【${un}】创建成功，已绑定邮箱：${email}`);
-  renderMemberList();
-  renderAdminMailSelect();
-  document.getElementById("new-member-name").value="";
-  document.getElementById("new-member-pwd").value="";
-  document.getElementById("new-member-email").value="";
+  renderMemberList(); renderAdminMailSelect();
+  ["new-member-name","new-member-pwd","new-member-email"].forEach(id=>document.getElementById(id).value="");
+};
+
+// ============ 邮件日志 ============
+function renderMailLog(){
+  const wrap = document.getElementById("mail-log-list");
+  wrap.innerHTML = data.mailLogs.map(log=>
+    `<div class="log-item">【${esc(log.time)}】收件：${esc(log.to)}｜状态：${esc(log.status)}｜消息：${esc(log.msg)}</div>`
+  ).join("") || "暂无邮件日志";
 }
-document.getElementById("btn-chg-pwd").onclick = changePassword;
-function changePassword(){
+
+// ============ 改密/邮箱 ============
+document.getElementById("btn-chg-pwd").onclick = ()=>{
   const oldPwd = document.getElementById("old-pwd").value.trim();
   const newPwd = document.getElementById("new-pwd").value.trim();
-  if(currentUser.pwd !== oldPwd){alert("原密码错误");return;}
-  if(!newPwd){alert("新密码不能为空");return;}
+  if(currentUser.pwd !== oldPwd){ alert("原密码错误"); return; }
+  if(!newPwd){ alert("新密码不能为空"); return; }
   currentUser.pwd = newPwd;
-  const userObj = data.users.find(u=>u.username === currentUser.username);
-  userObj.pwd = newPwd;
-  saveData();
-  alert("密码修改成功");
-  document.getElementById("old-pwd").value="";
-  document.getElementById("new-pwd").value="";
-}
-document.getElementById("btn-save-email").onclick = saveEmail;
-function saveEmail(){
+  data.users.find(u=>u.username === currentUser.username).pwd = newPwd;
+  saveData(); alert("密码修改成功");
+  document.getElementById("old-pwd").value=""; document.getElementById("new-pwd").value="";
+};
+document.getElementById("btn-save-email").onclick = ()=>{
   const email = document.getElementById("user-email").value.trim();
   currentUser.email = email;
-  const userObj = data.users.find(u=>u.username === currentUser.username);
-  userObj.email = email;
-  saveData();
-  alert("邮箱保存成功");
-}
-//保存发件邮箱配置
-document.getElementById("btn-save-mail-config").onclick = saveMailConfig;
-function saveMailConfig(){
-  if(!currentUser.isAdmin){alert("仅管理员可配置发件服务");return;}
-  const serviceId = document.getElementById("emailjs-service-id").value.trim();
-  const templateId = document.getElementById("emailjs-template-id").value.trim();
-  const publicKey = document.getElementById("emailjs-public-key").value.trim();
-  if(!serviceId || !templateId || !publicKey){
-    alert("请完整填写EmailJS的Service ID、Template ID和Public Key");
-    return;
-  }
-  data.mailConfig = {serviceId, templateId, publicKey};
-  //初始化EmailJS
-  emailjs.init(publicKey);
-  saveData();
-  alert("✅发件邮箱配置保存成功，现在可以直接从网页发送邮件了");
-}
-//统一发邮件函数
+  data.users.find(u=>u.username === currentUser.username).email = email;
+  saveData(); alert("邮箱保存成功");
+};
+
+// ============ 发邮件 ============
 async function sendMail(receiverEmail, subject, textContent){
-  //直接硬编码EmailJS配置
-  const mailConfig = {
-    serviceId:"YinYifei021011",
-    templateId:"template_jftljpv",
-    publicKey:"hGimZnujSUONkURfm"
-  };
-  //初始化EmailJS
-  emailjs.init(mailConfig.publicKey);
-  //发送邮件，模板参数需要和EmailJS里的模板变量对应
-  return emailjs.send(
-    mailConfig.serviceId,
-    mailConfig.templateId,
-    {
-      to_email: receiverEmail,
-      subject: subject,
-      message: textContent,
-      from_name: "逸想待办系统"
-    }
-  );
+  emailjs.init(data.mailConfig.publicKey);
+  return emailjs.send(data.mailConfig.serviceId, data.mailConfig.templateId, {
+    to_email: receiverEmail, subject, message: textContent, from_name: "一页清单系统"
+  });
 }
-//导出全部数据备份
-document.getElementById("btn-export-backup").onclick = exportBackup;
-function exportBackup(){
+document.getElementById("btn-test-mail").onclick = async ()=>{
+  if(!hasPermission(PERM.sendMail)) return;
+  const receiverEmail = currentUser.email;
+  if(!receiverEmail){ alert("请先在上方填写并保存你的收件邮箱！"); return; }
+  try{
+    await sendMail(receiverEmail, "一页清单 - 测试提醒邮件", "这是一页清单系统发送的测试邮件，邮件功能正常。");
+    alert("✅邮件发送成功！");
+    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"success",msg:"个人测试邮件发送成功"});
+  }catch(e){
+    alert("❌发送失败："+e.message);
+    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"fail",msg:"发送失败："+e.message});
+  }
+  saveData(); renderMailLog();
+};
+document.getElementById("btn-admin-send-member-mail").onclick = async ()=>{
+  const selectedUserName = document.getElementById("selectMemberForMail").value;
+  const targetUser = data.users.find(u=>u.username === selectedUserName);
+  if(!targetUser){ alert("找不到该成员"); return; }
+  if(!targetUser.email){ alert("该成员尚未绑定邮箱，无法发送邮件"); return; }
+  const mailContent = document.getElementById("adminMailContent").value.trim();
+  if(!mailContent){ alert("邮件内容不能为空"); return; }
+  try{
+    await sendMail(targetUser.email, "一页清单 - 管理员发送提醒", mailContent);
+    alert(`✅邮件成功发送给成员【${targetUser.username}】`);
+    data.mailLogs.push({time:getNowTimeStr(),to:targetUser.email,status:"success",msg:`管理员${currentUser.username}向成员${targetUser.username}发送邮件`});
+  }catch(e){
+    alert(`❌发送失败：${e.message}`);
+    data.mailLogs.push({time:getNowTimeStr(),to:targetUser.email,status:"fail",msg:`管理员${currentUser.username}发送给${targetUser.username}失败：${e.message}`});
+  }
+  saveData(); renderMailLog();
+};
+document.getElementById("btn-batch-remind").onclick = async ()=>{
+  const members = data.users.filter(u=>!u.isAdmin && u.email);
+  if(!members.length){ alert("没有绑定邮箱的成员"); return; }
+  if(!confirm("确认要给所有有未完成任务的成员批量发送提醒邮件吗？")) return;
+  let successCount=0, failCount=0, skipCount=0;
+  const fmtP = p => p==="high"?"高优先级":p==="mid"?"中优先级":"低优先级";
+  for(const member of members){
+    const unfinished = data.todos.filter(t=>t.assignTo===member.username && t.status!=="finish");
+    if(!unfinished.length){ skipCount++; continue; }
+    const waitTodos = unfinished.filter(t=>t.status==="wait");
+    const doingTodos = unfinished.filter(t=>t.status==="doing");
+    let mailContent = `您好 ${member.username}：\n\n您有${unfinished.length}项未完成的待办任务，请及时处理：\n\n`;
+    if(waitTodos.length){
+      mailContent += `【未开始（${waitTodos.length}项）】\n`;
+      waitTodos.forEach((t,i)=>{ mailContent += `${i+1}. [${t.category}] ${t.title}\n`; });
+      mailContent += "\n";
+    }
+    if(doingTodos.length){
+      mailContent += `【进行中（${doingTodos.length}项）】\n`;
+      doingTodos.forEach((t,i)=>{ mailContent += `${i+1}. [${t.category}] ${t.title}\n`; });
+      mailContent += "\n";
+    }
+    mailContent += "请尽快跟进，逾期任务会自动标红提醒。\n—— 一页清单系统自动发送";
+    try{
+      await sendMail(member.email, "一页清单 - 待办任务提醒", mailContent);
+      successCount++;
+      data.mailLogs.push({time:getNowTimeStr(),to:member.email,status:"success",msg:`批量提醒发送给${member.username}，未完成任务${unfinished.length}项`});
+    }catch(e){
+      failCount++;
+      data.mailLogs.push({time:getNowTimeStr(),to:member.email,status:"fail",msg:`批量提醒发送给${member.username}失败：${e.message}`});
+    }
+  }
+  saveData(); renderMailLog();
+  alert(`✅批量提醒完成\n成功发送：${successCount}人\n无待办跳过：${skipCount}人\n发送失败：${failCount}人`);
+};
+
+// ============ 备份/导出/同步 ============
+document.getElementById("btn-export-backup").onclick = ()=>{
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   const now = new Date();
   const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
-  a.href = url;
-  a.download = `逸想待办备份_${dateStr}.json`;
-  a.click();
+  a.href = url; a.download = `一页清单备份_${dateStr}.json`; a.click();
   URL.revokeObjectURL(url);
   alert("✅备份文件已下载，换电脑时导入这个文件即可恢复所有数据");
-}
-//生成配置同步码（只包含邮箱和AI配置，不包含账号密码）
-document.getElementById("btn-gen-sync-code").onclick = genSyncCode;
-function genSyncCode(){
-  const syncData = {
-    mailConfig: data.mailConfig,
-    aiConfig: data.aiConfig
-  };
-  const jsonStr = JSON.stringify(syncData);
-  const syncCode = btoa(unescape(encodeURIComponent(jsonStr)));
-  prompt("复制下面这段同步码，换电脑时在登录页粘贴即可自动恢复邮箱和AI配置：", syncCode);
-}
-//应用同步码
-document.getElementById("btn-apply-sync-code").onclick = applySyncCode;
-function applySyncCode(){
-  const code = document.getElementById("sync-code-input").value.trim();
-  if(!code){alert("请先粘贴同步码");return;}
-  try{
-    const jsonStr = decodeURIComponent(escape(atob(code)));
-    const syncData = JSON.parse(jsonStr);
-    if(syncData.mailConfig) data.mailConfig = syncData.mailConfig;
-    if(syncData.aiConfig) data.aiConfig = syncData.aiConfig;
-    saveData();
-    alert("✅配置同步成功！邮箱和AI配置已恢复，现在可以登录了");
-    document.getElementById("sync-code-input").value = "";
-  }catch(e){
-    alert("❌同步码格式错误，请检查后重试");
-  }
-}
-//导入备份
-document.getElementById("btn-import-backup").onclick = ()=>{
-  document.getElementById("import-backup-file").click();
 };
+document.getElementById("btn-import-backup").onclick = ()=>document.getElementById("import-backup-file").click();
 document.getElementById("import-backup-file").onchange = function(e){
-  const file = e.target.files[0];
-  if(!file) return;
+  const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = function(ev){
     try{
       const importData = JSON.parse(ev.target.result);
-      if(!importData.users || !importData.categories){
-        alert("❌备份文件格式不正确，请选择正确的逸想待办备份文件");
-        return;
-      }
+      if(!importData.users || !importData.categories){ alert("❌备份文件格式不正确"); return; }
       if(!confirm("⚠️导入备份会覆盖当前所有数据，确认继续吗？")) return;
       data = importData;
       if(!data.mailConfig) data.mailConfig = {serviceId:"", templateId:"", publicKey:""};
@@ -1248,173 +1412,139 @@ document.getElementById("import-backup-file").onchange = function(e){
       saveData();
       alert("✅备份导入成功，页面即将刷新");
       setTimeout(()=>location.reload(), 1000);
-    }catch(err){
-      alert("❌备份文件解析失败："+err.message);
-    }
+    }catch(err){ alert("❌备份文件解析失败："+err.message); }
   };
   reader.readAsText(file);
 };
-//给自己发测试邮件
-document.getElementById("btn-test-mail").onclick = testMail;
-async function testMail(){
-  if(!hasPermission(PERM.sendMail)) return;
-  const receiverEmail = currentUser.email;
-  if(!receiverEmail){alert("请先在上方填写并保存你的收件邮箱！");return;}
+// ============ 日报导出 ============
+const DAILY_REPORT_TEMPLATE_B64 = "UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEsDBBQAAAAIAIdO4kC7N9mvMAEAADQCAAAQAAAAZG9jUHJvcHMvYXBwLnhtbJ2RwUoDMRRF94L/ELJvMy0iUjIpgog7B1p1HTNv2sBMEpLn0PotLnQh+Adu9G9U/AwzE9CpuHJ3X+7lvvMIn2+amrTgg7Ymp5NxRgkYZUttVjm9WJ6OjigJKE0pa2sgp1sIdC7293jhrQOPGgKJFSbkdI3oZowFtYZGhnG0TXQq6xuJcfQrZqtKKzix6qYBg2yaZYcMNgimhHLkvgtpapy1+N/S0qqOL1wuty4CC37sXK2VxHiluCoW5PPh6eP+hbPhOz8D2d1dSO2D4C3OWlBoPQn6Nl4+peRaBugac9pKr6XB2NzF0tDr2gX04v358e31Li7hLPrprZfD6FDrAzHpA1HsBruCxBGNXcKlxhrCeVVIj38AT4bAPUPCTTiLNQCmnUO+/uK46Vc3+/lu8QVQSwMEFAAAAAgAh07iQAk5wUFEAQAAXAIAABEAAABkb2NQcm9wcy9jb3JlLnhtbI2STU7DMBCF90jcIfI+cX5oBVaSSoC6ohISRSB2lj1tLWLHsg1p7sCeE3IPnKQNqWDB0vPefPNm5Hyxl1XwDsaKWhUoiWIUgGI1F2pboMf1MrxEgXVUcVrVCgrUgkWL8vwsZ5qw2sC9qTUYJ8AGnqQsYbpAO+c0wdiyHUhqI+9QXtzURlLnn2aLNWWvdAs4jeM5luAop47iDhjqkYgOSM5GpH4zVQ/gDEMFEpSzOIkS/ON1YKT9s6FXJk4pXKv9Toe4UzZngzi691aMxqZpoibrY/j8CX5e3T30q4ZCdbdigMqcM8IMUFebshWqFRsQOZ4UuwNW1LqVv/VGAL9uy6+Pzxz/LntUn3zgAQ98FjIkPypP2c3teonKNE7nYRKHabZOZiS9JFn60k096e+yDQV5mP1vYnZFZhcT4hFQ9rlP/0P5DVBLAwQUAAAACACHTuJAH+xP3WABAAD/AgAAEwAAAGRvY1Byb3BzL2N1c3RvbS54bWy1kl1PgzAUhu9N/A+k90BbYMACLHwtMZpo5tytqVA2EmgJLdPF+N8tw+m89eOuJ+fkPc95+waLl7bR9rQXNWchQAYEGmUFL2u2DcHDeql7QBOSsJI0nNEQHKgAi+jyIrjreUd7WVOhKQkmQrCTspubpih2tCXCUG2mOhXvWyJV2W9NXlV1QTNeDC1l0sQQzsxiEJK3evcpBya9+V7+VLLkxUgnNutDp3Cj4EP8oFWtrMsQvGZOmmUOdHSc+6mOIEp03/JdHXoQ4gSnSz/O34DWjcMYaIy06vSrdKO09nLedM9C9pHrxnnuZ+4M2p5t4STxXB/FGKVx5lsosx4RCsyv8cA8YfwSyDoBXd/frigZv+qGHPggJ7onzptI9gM9Lj9Wf7baPlutLC6HQiZD3ZQb2n+zBkMH6wgbKk8G9qBt/YsRzokmJU0xNESqDK+Ghk4otR1N/qvHuQHmmI0pudE7UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAADAAAAeGwvUEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAOAAAAeGwvd29ya3NoZWV0cy9QSwMEFAAAAAgAh07iQC529U/OKAAAOAgBABgAAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWyVnd1yG8eWZu8not9Bw7mZPh0WCZASf8JWh1EE6j+io7tPzzWPBNmKI4lqkrbcbz8fgNyonbmykD43lrzyy6zC2lWFXUVQ+PFf//jy+dXv26fnT49ffzpbvL44e7X9+v7xw6evv/x09tf/3Pxwc/bq+eXh64eHz49ftz+d/c/2+exf3/3T//rx++PT359/3W5fXmmFr88/nf368vLt7vz8+f2v2y8Pz68fv22/auTj49OXhxf979Mv58/fnrYPH/aTvnw+X15cvD3/8vDp69lhhbunP7PG48ePn95v7x/f//Zl+/XlsMjT9vPDi/b/+ddP355ttT8+/Kn1Pjw9fNdrtf1xu3h/GDmut7jC/n359P7p8fnx48vr949fzg+7xld5e34bvc4v77FQRtaXh6e///btBy38TS/ub58+f3r5n/3LtR3avkzrfP/+/fX3b8+v338Ne+EELa7Pty/Vb88vj1/uH14ezt79uK/Avz2dv/vxwydZ3JX+1dP2409nPy/uRpXlTCP7zH992n5/dn9/9fLwt//Yft6+f9l+0MFy9mp3EPzt8fHvu2ArdLFbfR/Yrfnw/uXT79tq+/nzbulrHUj/HTZzfffz4na3mfPjdvzfbZub/cHzb0+vPmw/Pvz2+aV6/Pz/Pn14+fWns9szY//++L3Zfvrl1xft0OXrN7tF3z9+1gr676svn3YH9dmrLw9/HPb3MHt5/frm+s3Zq/d7K2HJRZh6mLQMk/Tn98OkNxevF8vTky7DJP0ZJi2Wr98WJl2FSfrTJt2+vizs3tswSX/apN2LP/WK5H+vQX9OU0qvSGf/fpL+tEnSecKbCrOfoD9twrKwYwtdcw4F0l+mSSVvi2NddwfioUaXb0vbsroupsIu3r4u2F5YYXd/sT3UX+nh/HDs7Y/q3dn27senx++vdCXSPu4P0TduW8fjVmfGt4fdNXRxpy3o0N3N+FlTdujslQ7tZ9Hf3138eP67zpP3IbFiYhEnqkNCr/W4xjJO3B8SejHHxGWcWB8SV/vTY7djmxTUKWhS0KagS0F/AIfzd7eV4QAuj5sdHTiX1aNavbqd2svFrvY5kQrsRe4uDbulVymoDmB53Nb9AejsOlq5SqwcEjqZjok3cWLDxNs4UTNxHScaJm7iRMvEbZzomFgkB1KfiSRH0nCI6DpwfL2L5FAaM5HpWIpKpsNtV7LlzVzJFFDJdBGZtpYUYHWI7C4eUyYpQRUyi8PZ8zrZ4fswPNV9HcjuJMTptjk1WIfBK838+G59+cNGL/1jZpXm1CpttEp1+Ze5Vboo2Fz+0M5srg9Bd2Idd8DOhzGQt7vjP6qT3pN2dbpa7q9auXNLiX2hbK3VAcRlSY77KmSsLEnV7sOwK0sg+bKcGqzD4L4s+wPl14en7YezQ79TX93Vl7uj9tO+dVlf/bDRUZat2qmNtCc30l7dtbYRveLq6i9zG+lOrtNd3XW2zvLsXXP1Qzuzs31Y5/p4PRtARk+imusi6t6pcjXfXWZ3J+ex5gcQ1zy5klUhM1fzMOxqHki+5qcG6zCImh/KrL3Gqd2cWq89td6+a8R63akp+9eIKX2Y4ooGMnoSFU3vVKcvqArENTuAuGbJe0sVMlaz6WK+fxu9D8OuZoHka3ZqsA6D/0jNTq3XnlpvpmanpszULExxF9dApiqOnkQ1U++wP9EWu1Mx0/9pXCVbRG+5yXv7KmT8m+AyeXOvQuZQRTXjcXtwH4ZdFQPJV/HUYB0G/5EqnlqvPbXeTBVPTZmpYpgy1WwIZP+GuD/WR5+JqqjynD7zFNifeVObskx6q9UhEp2Ly6RXqULGzsVFWsYw7soYSL6MpwbrMPiPlPHUeu2p9WbKeGrKTBnDFHcyBuLKGMi+1FEZ1WqeLqMC8QX0AOKiJVfIKmRmixbGXdECyRft1GAdBv+Rop1arz213kzRTk2ZKVqY4op23ClrL8ZAWLSd/NNV2yXisgUS1y25t6gsdCxccs20cVc4Q/nKnRytbfQfqZ3NyW6vtdHsijPVOzlnpnw2x107icYIRafd7iHO/k3w8Fwk9za4iyQlPJDdqsdbv2VyPazCNP2x7/deJ/3ovY37EoZ1s0o3NiE7WttoVvj+iSo6vsbmZFdsbTS74lwJwyvIzpkrYZjjTkHb9FTVMUJxCXUDVSrh4cmAzuOpXsk94Wr3QE5ljouaFK2ykBX1Iqn6vQV8VcPCWcsbm5AdrW0063Ouqqe2155cca6qYcXsXsxVNczxVQ3IV9WjuKp6JlCq6uGxgbsP3D0eRQ3TmwoLHWuYdDr3FvA1DAtnq7SxCdnR2kaz9uZqeGp77ckV52oYVszuxVwNw5ypYINtekJjhOIa6saiVMPDYwBfw/BgILq4Jrcd1f6WRSfroYYoYFjCFzCgbIk2tlx2tLbRrLq5Ap7aXntyxbkChhWzezFXwDBnqtZgm57QGKG4gLrfLxXw8EjAFzA8JPAFvEzvCRchdDwJcSENAV/DgLJV2tiK2dHaRrP25mp4anvtyRXnahhWzO7FXA3DnKlgg216QmOE4hrq/r9Uw8MjAl/D8NAgqmFy11gtQshqiBKGcV/CgLJF2tiC2dHaRrPy5kp4anvtyRXnShhWzO7FXAnDnKleg216QmOE4hLq5r9UwsPzAd/hXCaXxdX+J+BJh3OZ3jFaaLao4UGEL2pA2bJtbMHsaG2jWZ1zRT21vfbkinNFDStm92KuqGGOb3ACmk6k0fZmX+e4qHoUUCrq4WnBtNxq9zBODY66pmMje4l7x/CMYbaCYdxXMKBsjTZho3qfzzy5rm00626ugqe2155cca6CYcXsXsxVMMzxFQxoUj7a3mQqqLOtVMHDo4NpuZU+doIW9TK5clYWshImZ/K9jfsShnWzRdrYhOxobaNZeXMlPLW99uSKcyUMK2b3Yq6EYY4vYUCT89H2hiVc6g2uUMJdZH/770659N4xZKJ7x8v03tFCh6Lq0zLJMx0bd0U1lC3b5uRobaNZnTNFtTnZ7bU2ml1xpqgn58wU1ea4ohpyRTWUKaoeKOyKeuKnxsvDM4dpuVUg0ZU1vXMMmXDXkbxz3tuor194tJH1ubEJ2dHaRrO25+p3anvtyRXn6hdWzO7FXP3CHF+/gCbho+1Npn4qQumkPDw3mJZbLQ8kPgXT20YL2XUVJQyL+BIGlC3SxhbMjtY2mpU3V8JT22tPrjhXwrBidi/mShjm7Iuz/wHUYJue0BihqLlZ6snBroTzH7DZJZLL6lVyk7gKmaimV+ldiIUONU3fKW3UVzQ81cjWbGMTsqO1jWZdzlX01PbakyvOVTSsmN2LuYqGOVP5Btv0hMYIxRXVo4TSSXl42rC7MB+706ukIKtleCQRhZLzsLLQoaZJxe9t1Nc0rJqt2sYmZEdrG83anKvpqe21J1ecq2lYMbsXczUNc6YCDrbpCY0RimuqRwulmh6ePuhibT8NW+0+Tpw+ZL1Kb0IsZFdaNDthEV/DgLJV2tiC2dHaRrP25mp4anvtyRXnahhWzO7FXA3DnKlgg216QmOE4hrq2UKphofHD7paTzUMTySiszCpUbUModkahvFp3bVNyVZpc3K0ttG9vXda6gdNmPk0nGWz22lt9LCSXsdfZlfq4myjrWp6fqu9ZafCDERjhOJa6fnArlY3b+Y+dro8PEHQLcx0BcXNxiGjd+gpg3uN8CTCSpdcYO/DdvTDIDsk1oaySjcnR2sbtdJdq3TapewHGS2b3U5ro1a6a5VuZqUuzjbLa5VuJttb1pcuOJrQGKXi0unBwK50t7ezn0RdHp4d+J70QKJK4Z4iPHGwSuHNLoz7SgWUNbgJuzHztMZGrVI3qpR2KV+pU9tp45Wq5Y0qNbNSF2eb5Y0qNZPtLTuVZSAaIxRXSidP4SQ7PCHwhTqQqFC4dzhkws0fyhRGfZkCminTqdF6GUatTLcqk3YoX6ZTK7XxStXyVmWaWamLs83yVmWayfaW9WUKOzKhMUpFZbrUW0/hfWsX2d8i2DVqFYiv05vkpqEKmZk62airk6F8nU6O1jYa6nR5oY/da4eydbJsdjutjYYL3+WFPno/s1IXZxttVdPzW+0tOxVlIBojFNdJd+67Os3fyV0e7u3d6RRIVKbkhKlCJpTpAk/DbNwXKjxEyArc2ITsaG2jVqiFCqVdyhfq1HbaeCW9DhVqZqUuzjaXCxVqJttb1j01MTTVboxQXCjpLp1QiiQn1IFElUru2Kr9Z/6PP2u/4C+xHNbwvYRNydZic3L08PsQ2pxVaqlKaZfylQqbzm7n8EsPx5X0OlSpmZUOv9hwzDaXS1VqJtvb/vtKhR1xn/S01L54caV0K16q1OFu3Z9TBxJVKunqqstwj2+9RNLQ39u4P6fClKzBjU3IjtY2apXa/c6RdilfqVPbaeOV9DpUqZmVujjbXO5+9Wgm21vWVyrsyKR2tFSmUrrBLlXqcA++e3BybMffJHfDq8sQmn6HsTL0JvdDtfswqpPA3vvWE9r9gtd//HX8v+vLu/Xl5T/njW+Y31zeSetMvma+vtRvJ83lG+abyzuVY2b9lvn2Ur+YNJfvmO8u9QtIc/ne8tPFciAaIxSflboRL9X6cK+uGzyryuoSqDI07ci9oWnimmhDVBM1RC1RR9QTDURjhGJBut0vCTo8Edg158eTYYGTIYTULSq03f++4u5w3h0+b//5XAdWOKL/z337X+cX/zv+MVl1GaZ7vQF5vUAbmzilaqKGqCXqiHqigWiMUKxXt6MlveHOP9KrBv13/zvZlyHk9TbXZa1hmtd6QOoN7XBfh8V3XcixwG+St5lNNpQ8xagt5J9AvUkeYzTZUHIH3WZDiZUuhNyp2xMNttT0BjlGKC6YylAq2OEOOjof8Ms3lyHkC7Y/H27u9AntP3FChPm+cge0e2M7lultcqO0DtvVFTHzsY7NydH65GgTRo8t3M2/aLkfNCn/VtXaatPbdBdQVK/wOqfzd2BqjFBcLwku1UsRNchxvZIjd3UZQqjXYqmC/ZkrWFjAF+yA4oLpTsGf2euw4bmChSWy5axPzm3C6LFgtyrYrQqmsyjXzbW2mi9YeFFTdfqQcjUciMYIRQW7Kj8i2EXSguFzbxbSHsZvOItrFey2fIbZAq5gAcUFS+6c1iGkD/blzrCTo/XJ0cZGQ+t9dfEvm6uLHzRppmAhrzd3u5R3Abnq9EQD0RihuGB6WyicYVeHe+vd2+B0ZUruY1YhtHt4FBdseXHXLJd/omCHrehxrr3ce9twdElMWpN1CM0V7LBqfrQ+ObexUSvYQgVbqGAzTwNa211fsPCi3BkWUq6GA9EYobhgup0sFexwZxsVDD+ovzqEooI1y8ti02HzfJ3C9qI6JR3GOszLV2JzcrQ+OdrYqNVpqTotVaeZZwFtyKtLsCOtC8gVpScaiMYIxXWSjVKdFEmvhPjh+1UI8cS60on1J966bIHp5d4HtHvfnc7o5D1zHUL7gtnN682d6jhzt7jhBLUQd6rFzISaE9Rv3KlwMxMaTlDfcqcDYGZCGybo/WoqdfDpT0mgIUzUddMmjhGKS11+5HAVniZExpPWeWUhllpverqLLp+bYSu+1AFNL3dtm5nQhqgmaohaoo6oJxqIxgjFgsv3+Ve4qV8RVYa8IExcW8oLQqpmqiFqiTqinmggGiMUC9J7c+lig7vr1RVQZcgLQmptKS8IqZqphqgl6oh6ooFojFAsSPfFJUHhbnp6UasroIronmhNtCGqiRqilqgj6okGojFCsSBdmUqCcDO3ugpoOlwqQ5PGe6I10YaoJmqIWqKOqCcaiMYIxYJ0VS4JUmT3fj699NVVQF4QUveWmiauiTZENVFD1BJ1RD3RQDRGKBL0pnzrt4skggw5QYYmG/dEa6INUU3UELVEHVFPNBCNEYoF6WagcAS9wf3CypAXhNS9pSZna6INUU3UELVEHVFPNBCNEYoFlW9t3oS7lul1rgx5QUjdW2qauCbaENVEDVFL1BH1RAPRGKFYkBrV0hGEXnb1BqgiuidaE22IaqKGqCXqiHqigWiMUCyo3Im/QUO8IqqI7onWRBuimqghaok6op5oIBojFAsqd9Jv0OquiCqie6I10YaoJmqIWqKOqCcaiMYIxYLUx5ZOMbS6qzdAlaHpsnRvyF+DMHHDVE3UELVEHVFPNBCNEYoFlTvpN2ibV0SVIS8IE9eWmpxtiGqihqgl6oh6ooFojFAsqNxJv2EnTVQZ8oIwcW0pLwipmqmGqCXqiHqigWiMUCyo3Em/QY+8IqoMeUGYuLaUF4RUzVRD1BJ1RD3RQDRGKBL0ttxJ7yJJJ01UGXKCDE021kQbopqoIWqJOqKeaCAaIxQLKnfSb9Ejr4gqQ14QJq4tNTnbENVEDVFL1BH1RAPRGKFYULmTfoseeUVUGfKCMHFtKS8IqZqphqgl6oh6ooFojFAsqNxJv0XbvCKqDHlBmLi2lBeEVM1UQ9QSdUQ90UA0RigWVO6k37KTJqoMeUGYuLaUF4RUzVRD1BJ1RD3RQDRGKBZU7qTfspMmqgx5QZi4tpQXhFTNVEPUEnVEPdFANEYoFlTupN+i+10RVYa8IExcW8oLQqpmqiFqiTqinmggGiMUCyp30m/REK+IKkNeECauLeUFIVUz1RC1RB1RTzQQjRGKBZU76bdodVdElSEvCBPXlvKCkKqZaohaoo6oJxqIxgjFgsqd9Fu0uiuiypAXhIlrS3lBSNVMNUQtUUfUEw1EY4QiQdflTnoXSTpposqQE2RosrEm2hDVRA1RS9QR9UQD0RihWFC5k75GQ7wiqgx5QZi4ttTkbENUEzVELVFH1BMNRGOEYkHlTvoare6KqDLkBWHi2lJeEFI1Uw1RS9QR9UQD0RihWFC5k75Gq7siqgx5QZi4tpQXhFTNVEPUEnVEPdFANEYoFlTupK/R6q6IKkNeECauLeUFIVUz1RC1RB1RTzQQjRGKBZU76d13raUXaaDKUl4QUmtLeUFI1Uw1RC1RR9QTDURjhGJB5U76Gq3uiqgy5AVh4tpSXhBSNVMNUUvUEfVEA9EYoVhQuZO+Rqu7IqoMeUGYuLaUF4RUzVRD1BJ1RD3RQDRGKBZU7qSv0equiCpDXhAmri3lBSFVM9UQtUQdUU80EI0RigWVO+lrtLorosqQF4SJa0t5QUjVTDVELVFH1BMNRGOEIkE35U56F0ku0kSVISfI0GRjTbQhqokaopaoI+qJBqIxQrGgcid9g4Z4RVQZ8oIwcW2pydmGqCZqiFqijqgnGojGCMWCyp30DVrdFVFlyAvCxLWlvCCkaqYaopaoI+qJBqIxQrGgcid9g1Z3RVQZ8oIwcW0pLwipmqmGqCXqiHqigWiMUCyo3EnfoNVdEVWGvCBMXFvKC0KqZqohaok6op5oIBojFAtSH1v48MINWt0VUWXIC8LEtaW8IKRqphqilqgj6okGojFCsaByJ32DVndFVBnygjBxbSkvCKmaqYaoJeqIeqKBaIxQLKjcSd+g1V0RVYa8IExcW8oLQqpmqiFqiTqinmggGiMUCyp30jdodVdElSEvCBPXlvKCkKqZaohaoo6oJxqIxgjFgsqd9A1a3RVRZcgLwsS1pbwgpGqmGqKWqCPqiQaiMUKRoNtyJ72LJJ00UWXICTI02VgTbYhqooaoJeqIeqKBaIxQLKjcSd+iIV4RVYa8IExcW2pytiGqiRqilqgj6okGojFCsaByJ32LVndFVBnygjBxbSkvCKmaqYaoJeqIeqKBaIxQLKjcSd+i1V0RVYa8IExcW8oLQqpmqiFqiTqinmggGiMUCyp30rdodVdElSEvCBPXlvKCkKqZaohaoo6oJxqIxgjFgsqd9C1a3RVRZcgLwsS1pbwgpGqmGqKWqCPqiQaiMUKxoHInfYtWd0VUGfKCMHFtKS8IqZqphqgl6oh6ooFojFAsqNxJ36LVXRFVhrwgTFxbygtCqmaqIWqJOqKeaCAaIxQLKnfSt2h1V0SVIS8IE9eW8oKQqplqiFqijqgnGojGCMWCyp30LVrdFVFlyAvCxLWlvCCkaqYaopaoI+qJBqIxQpGgxUW5ld5nkl46w/TtzaHndpKObFKyzrBNhunrmdHDNxmmL11GrsuwPsOGDNPXJvv1El3lxnpxgQZ5lWHSFXKRLsyVLjDpApMuMOkCky4w6QKTLjDpApMuzxJd5TZ7cYFGWLrApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5Vmiq9x0Ly7QFksXmHQFFulCTrrApAtMusCkC0y6wKQLTLrApAtMujxLdJVb8MUFmmTpApOuwCJdyEkXmHSBSReYdIFJF5h0gUkXmHSBSZdnia5yQ764QMssXWDSFVikCznpApMuMOkCky4w6QKTLjDpApMuMOnyLNFVbs8XF2igpQtMugKLdCEnXWDSBSZdYNIFJl1g0gUmXWDSBSZdniW6ys364gLttHSBSVdgkS7kpAtMusCkC0y6wKQLTLrApAtMusCky7NEV7l1X1yguZYuMOkKLNKFnHSBSReYdIFJF5h0gUkXmHSBSReYdHmW6Co38osLtNrSBSZdgUW6kJMuMOkCky4w6QKTLjDpApMuMOkCky7PYl27744r/BRzscukXT1Zdcx5Xcytj7mp099kWJ1h+vdesS9thnUZ1mfYkGFjzBJd6mCLunyXu/9uwNVCX+OQKJSuwCJdyEkXmHSBSReYdIFJF5h0gUkXmHSBSZdniS51sEVdvss1XWDSFVikCznpApMuMOkCky4w6QKTLjDpApMuMOnyLNGlDraoy3e5pgtMugKLdCEnXWDSBSZdYNIFJl1g0gUmXWDSBSZdniW61MEWdfku13SBSVdgkS7kpAtMusCkC0y6wKQLTLrApAtMusCky7NElzrYoi7f5ZouMOkKLNKFnHSBSReYdIFJF5h0gUkXmHSBSReYdHmW6FIHW9Tlu1zTBSZdgUW6kJMuMOkCky4w6QKTLjDpApMuMOkCky7PEl3qYIu6fJdrusCkK7BIF3LSBSZdYNIFJl1g0gUmXWDSBSZdYNLlWaJLHWxRl+9yTReYdAUW6UJOusCkC0y6wKQLTLrApAtMusCkC0y6PEt0qYMt6vJdrukCk67AIl3ISReYdIFJF5h0gUkXmHSBSReYdIFJl2exrt1XDJd0he+H9/+A4oKsOjKvi7n1Mee7eubqTK7JsDbDugzrM2zIsDFmiS51sEVdvssNR1f4inanULpCLtKFudIFtskw6UJOusCkC0y6wKQLTLrApMuzRJc62KIu3+WaLjDpCizShZx0gUkXmHSBSReYdIFJF5h0gUkXmHR5luhSB1vU5btc0wUmXYFFupCTLjDpApMuMOkCky4w6QKTLjDpApMuzxJd6mCLunyXa7rApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5VmiSx1sUZfvck0XmHQFFulCTrrApAtMusCkC0y6wKQLTLrApAtMujxLdKmDLeryXa7pApOuwCJdyEkXmHSBSReYdIFJF5h0gUkXmHSBSZdniS51sEVdvss1XWDSFVikCznpApMuMOkCky4w6QKTLjDpApMuMOnyLNGlDraoy3e5pgtMugKLdCEnXWDSBSZdYNIFJl1g0gUmXWDSBSZdniW61MEWdfku13SBSVdgkS7kpAtMusCkC0y6wKQLTLrApAtMusCky7NY1+5LiEu6whcV65S279JYLciqI/O6mFsfc9N6mwyrM6zJsDbDugzrM2zIsDFmiS51sEVdvssNR1f4CmGnULpCLtKFudIFJl1g0gUmXWDSBSZdYNIFJl1g0uVZoksdbFGX73JNF5h0BRbpQk66wKQLTLrApAtMusCkC0y6wKQLTLo8S3Spgy3q8l2u6QKTrsAiXchJF5h0gUkXmHSBSReYdIFJF5h0gUmXZ4kudbBFXb7LNV1g0hVYpAs56QKTLjDpApMuMOkCky4w6QKTLjDp8izRpQ62qMt3uaYLTLoCi3QhJ11g0gUmXWDSBSZdYNIFJl1g0gUmXZ4lutTBFnX5Ltd0gUlXYJEu5KQLTLrApAtMusCkC0y6wKQLTLrApMuzRJc62KIu3+WaLjDpCizShZx0gUkXmHSBSReYdIFJF5h0gUkXmHR5luhSB1vU5btc0wUmXYFFupCTLjDpApMuMOkCky4w6QKTLjDpApMuzxJd6mCLunyXa7rApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5Vmsa/d1oSVd0VeKBl1k1cKY12Vs6uDXx9zENhlWZ1iTYW2GdRnWZ9iQYWPMEl3qYIu6fJdrusCkK7BIF3LSBSZdYNIFJl1g0gUmXWDSBSZdYNLlWaJLHWxRl+9yTReYdAUW6UJOusCkC0y6wKQLTLrApAtMusCkC0y6PEt0qYMt6vJdrukCk67AIl3ISReYdIFJF5h0gUkXmHSBSReYdIFJl2eJLnWwRV2+yzVdYNIVWKQLOekCky4w6QKTLjDpApMuMOkCky4w6fIs0aUOtqjLd7mmC0y6Aot0ISddYNIFJl1g0gUmXWDSBSZdYNIFJl2eJbrUwRZ1+S7XdIFJV2CRLuSkC0y6wKQLTLrApAtMusCkC0y6wKTLs0SXOtiiLt/lmi4w6Qos0oWcdIFJF5h0gUkXmHSBSReYdIFJF5h0eZboUgdb1OW7XNMFJl2BRbqQky4w6QKTLjDpApMuMOkCky4w6QKTLs8SXepgi7p8l2u6wKQrsEgXctIFJl1g0gUmXWDSBSZdYNIFJl1g0uVZrGv3zZQlXdG3VwZdZNXCmNdlbOrg18fcxDYZVmdYk2FthnUZ1mfYkGFjzBJd6mCLunyXa7rApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5VmiSx1sUZfvck0XmHQFFulCTrrApAtMusCkC0y6wKQLTLrApAtMujxLdKmDLeryXa7pApOuwCJdyEkXmHSBSReYdIFJF5h0gUkXmHSBSZdniS51sEVdvss1XWDSFVikCznpApMuMOkCky4w6QKTLjDpApMuMOnyLNGlDraoy3e5pgtMugKLdCEnXWDSBSZdYNIFJl1g0gUmXWDSBSZdniW61MEWdfku13SBSVdgkS7kpAtMusCkC0y6wKQLTLrApAtMusCky7NElzrYoi7f5ZouMOkKLNKFnHSBSReYdIFJF5h0gUkXmHSBSReYdHmW6FIHW9Tlu1zTBSZdgUW6kJMuMOkCky4w6QKTLjDpApMuMOkCky7PEl3qYIu6fJdrusCkK7BIF3LSBSZdYNIFJl1g0gUmXWDSBSZdYNLlWaxr9y2ZJV3RN2kGXWTVwpjXZWzq4NfH3MQ2GVZnWJNhbYZ1GdZn2JBhY8wSXepgi7p8l2u6wKQrsEgXctIFJl1g0gUmXWDSBSZdYNIFJl1g0uVZoksdbFGX73JNF5h0BRbpQk66wKQLTLrApAtMusCkC0y6wKQLTLo8S3Spgy3q8l2u6QKTrsAiXchJF5h0gUkXmHSBSReYdIFJF5h0gUmXZ4kudbBFXb7LNV1g0hVYpAs56QKTLjDpApMuMOkCky4w6QKTLjDp8izRpQ62qMt3uaYLTLoCi3QhJ11g0gUmXWDSBSZdYNIFJl1g0gUmXZ4lutTBFnX5Ltd0gUlXYJEu5KQLTLrApAtMusCkC0y6wKQLTLrApMuzRJc62KIu3+WaLjDpCizShZx0gUkXmHSBSReYdIFJF5h0gUkXmHR5luhSB1vU5btc0wUmXYFFupCTLjDpApMuMOkCky4w6QKTLjDpApMuzxJd6mCLunyXa7rApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5Vmsa/eNnSVd0bd6Bl1k1cKY12Vs6uDXx9zENhlWZ1iTYW2GdRnWZ9iQYWPMEl3qYIu6fJdrusCkK7BIF3LSBSZdYNIFJl1g0gUmXWDSBSZdYNLlWaJLHWxRl+9yTReYdAUW6UJOusCkC0y6wKQLTLrApAtMusCkC0y6PEt0qYMt6vJdrukCk67AIl3ISReYdIFJF5h0gUkXmHSBSReYdIFJl2eJLnWwRV2+yzVdYNIVWKQLOekCky4w6QKTLjDpApMuMOkCky4w6fIs0aUOtqjLd7mmC0y6Aot0ISddYNIFJl1g0gUmXWDSBSZdYNIFJl2eJbrUwRZ1+S7XdIFJV2CRLuSkC0y6wKQLTLrApAtMusCkC0y6wKTLs0SXOtiiLt/lmi4w6Qos0oWcdIFJF5h0gUkXmHSBSReYdIFJF5h0eZboUgdb1OW7XNMFJl2BRbqQky4w6QKTLjDpApMuMOkCky4w6QKTLs8SXepgi7p8l2u6wKQrsEgXctIFJl1g0gUmXWDSBSZdYNIFJl1g0uVZrGv37aElXdE3jAZdZNXCmNdlbOrg18fcxDYZVmdYk2FthnUZ1mfYkGFjzBJd6mCLunyXa7rApCuwSBdy0gUmXWDSBSZdYNIFJl1g0gUmXWDS5VmiSx1sUZfvck0XmHQFFulCTrrApAtMusCkC0y6wKQLTLrApAtMujxLdKmDLeryXa7pApOuwCJdyEkXmHSBSReYdIFJF5h0gUkXmHSBSZdniS51sEVdvss1XWDSFVikCznpApMuMOkCky4w6QKTLjDpApMuMOnyLNGlDraoy3e5pgtMugKLdCEnXWDSBSZdYNIFJl1g0gUmXWDSBSZdniW61MEWdfku13SBSVdgkS7kpAtMusCkC0y6wKQLTLrApAtMusCky7NElzrYoi7f5ZouMOkKLNKFnHSBSReYdIFJF5h0gUkXmHSBSReYdHmW6FIHW9Tlu1zTBSZdgUW6kJMuMOkCky4w6QKTLjDpApMuMOkCky7PEl3qYIu6fJdrusCkK7BIF3LSBSZdYNIFJl1g0gUmXWDSBSZdYNLlWaxr902mJV3Rt50GXWTVwpjXZWzq4NfH3MQ2GVZnWJNhbYZ1GdZn2JBhY8wSXepgi7p8l2u6wKQrsEgXctIFJl1g0gUmXWDSBSZdYNIFJl1g0uVZoksdbFGX73JNF5h0BRbpQk66wKQLTLrApAtMusCkC0y6wKQLTLo8S3Spgy3q8l2u6QKTrsAiXchJF5h0gUkXmHSBSReYdIFJF5h0gUmXZ4kudbBFXb7LNV1g0hVYpAs56QKTLjDpApMuMOkCky4w6QKTLjDp8izRpQ62qMt3uaYLTLrA7jNMupCTLjDpApMuMOkCky4w6QKTLjDp8izRpQ62qMt3uaYLTLrApAtMusCkC0y6wKQLTLrApAtMusCkC0y6PEt0qYMt6vJdrukCky4w6QKTLjDpApMuMOkCky4w6QKTLjDpApMuzxJd6mCLunyXa7rApAtMusCkC0y6wKQLTLrApAtMusCkC0y6wKTLs0SXOtiiLt/lmi4w6QKTLjDpApMuMOkCky4w6QKTLjDpApMuMOnyLNK13H2PakHXPpN8C1WGVRl2n2HrDNtkWJ1hTYa1GdZlWJ9hQ4aNMTvoOn/+dbt9uX94eXj348NvL4+bT59ftk+vnrYffzr7eXk37v5BuT++fP76fLd9ef/T2a8vL9/uzs+/f//++vu359fvv54/fvz46f32/vH9b1+2X1/OlxeL6/PtS/Xb88vjl92yZ6808e7jftnV44vo5vHz58fvf33efvj3h6+/bH86uzh79+P2j5fh+UX/wOj5tBfvfvyyffplW20/f35+9f7xt68vP53py7ocDvu5uPt5ufvHSY/xwC/vft7fYKX85u5nfcNUZsJiqZHslMW1Rm5zc5YX2np288srjWRXW2o1/cuG3IPV4m6VW6ta3FV7fn58Lc/vfvz28Mt2fHj65dPX51eftx+l5+L17kfvT59+2R36h/95efwmbWev/raXv//rr9uHD9unXUDhj4+Pqvjhf7RDh7HNHup/z78/Pv19f4y8+/9QSwMECgAAAAAAh07iQAAAAAAAAAAAAAAAAAkAAAB4bC90aGVtZS9QSwMEFAAAAAgAh07iQCNqw5P5BQAAxhgAABMAAAB4bC90aGVtZS90aGVtZTEueG1s7VlLjxs1HL8j8R1Gc28zSfPYrpqtNq8udLddNWmrHp2Mk3HjGUe2s9vcUHtEQkIUxAWJGwckqEQleuHTLBRB+RD8bU8mduIQtVQIKnIa27//++FHrl1/lNLgDHNBWNYMy5ejMMDZiMUkmzTDu4Pepb0wEBJlMaIsw81wgUV4/eD9966hfZngFAdAn4l91AwTKWf7pZIYwTQSl9kMZ7A2ZjxFEoZ8Uoo5Oge+KS1VoqheShHJwiBDKbC9f9oPD5Y8uxQYZ1KoiRHlfcURrwHjaVkti4VoUx6cIdoMgXfMzgf4kQwDioSEhWYY6V9YOrhWQvs5EZVbaC26nv7ldDlBPK1omXwyLIRWq7Vq/bDgrwFUbuK6jW69Wy/4aQAajcBMo4vDc69RbbdyrAUynx7e3b1KpefgLf5XNnTuVVqHUcXBa5DhX93AN2qtTtXFa5DB1zbwV6J21Ko6/DXI4Osb+G6t2q51HbwGJZRk0w10FFXq3VqOLiBjRo+88Ea33Dvs5PAVCrKhSC0lYswy6U20FD1kvAerCkWRJFkgFzM8RiNI2zaiZMhJcEwmiVQy0D5G1rqZGomNKSUuECNOZrIZfjhDUAgrri9fvLh4/Pzi8Y8XT55cPP7e5u7QHaFsYtO9+ubTP776KPj9h69fPf3ciF7HCxv/y3cf//zTZ34g1JCl0BfPfn3+7OWXn/z27VMP/JCjoQ0fcBQTCQ0F0UCtkZGH6AgPuUNEUiyCW/g8uMNS8Id2pqP+IEHEoUAJID3Arkwc4K0Foj5cC7v+u8ehg/iAN+YPHV37CZ9L4pF8M0kd4AljtMW415ybSpbl5ME8m/iF87mNu4PQmU92G2VOdLvzGfRN4mPZTrCj5ilFmUQTnGEZqDU2xdhj3QNCHL+ekBFngo1l8IAELQQh9xANyNDJpRXREUkhLgufghBqxzcn94IWoz72HXzmIqEmEPXpganjxhtoLlHqYzlAKbUdfoxk4lOyv+AjG9cVEiI9wZQF3RgL4aO5zcFeK+g3oYH4w35CF6mL5JJMfTyPEWM2ssOm7QSlMx+2T7LExn4gppCiKDhl0gc/YW6FqDHEAWVbw32PYCfcg51lfRd6p63SKkHUypx7YnkDMyd/+ws6Rlj3DOjrTsdOSbazfRsJb79xezR/p1r2ISf+UvvvNeoOmmenGGpjc9v5v0//36fDd75Pb6vlt9+dVw0ZerU64Jljtz6Ep/4z+JhQ2pcLio+FPoYL2IPiHkwqIn3hxMWFbJbApypj4O7gJnAqXdJMRM5pIoIZE3BNDLeyUgt0nt4ej801s9yoRdFSgL6agkAtbqJvrEuWZXPz3MrXqKhoQNNCITgOBHCIaIaVhqGHWwKiOFYq5hS2Hfb3a9qUzHFh06VKDa7k/xKzVFqsBZxmdvhpFpzDW4XyUBiM0KwZjuFiBp/pDPwk1JEF0Qk8Z4wkN3F9k3yZcSE7SCQm6jqVzO6QEol5QEnaDPdMjExgaKZT5Z1S7u8UjZNgVZ1fyxwuavYfqJuyp27eKLaQl24e4vEYj6SdmdaMygUzzFsNm0Pa9JP4PBjSOb+DIFXLUbmucjgmAp4BahGkkxrAs1Wtmlf/KpEDzuR9IpN+gmbw9LCjYyE6S5BJXRCxpbILlXQYLG3BVK8p2tYNyzgeU3AEXPjhqfBQGaIEwjtiDIMr+eeparPaqqW9FWXkur1i0Qwv5a0zr+Ih3MbWbTcV98YaF4avYlFrlGtFKMpXIzN4nVDYT3jKA2CccpUdCXBGUQIGrj1fqLMrDm5c8sQaTtS2Zqehs+8VtWayYev+uJtIWQPvX9IwuqrCbDqiQPKExWa6rPetvOYK2dowR8Kys6yFtqx9VmyHy810R7ZbWi1dDLu/rZXJSUgbmE9QjHMbVAM3NsAWv7IhUt3Ka4O7xxuumunyJGB7ec1hK2GOakrjpSMt1VazrmpLAyEXXPe6qu06fqx5or5ku+a3vz4WgA5FqIqTS9G7tp9cgG49a2FqvDz+6WzRfy/YfwWw4UPoMh14ep1TKUwH0KCDPwFQSwMEFAAAAAgAh07iQLMS0itcCQAA2BoAABQAAAB4bC9zaGFyZWRTdHJpbmdzLnhtbOVZW28aSRZ+X2n/g8VKo8xKMXEmMzuasT2Kos3bKNFO9gcwDhNbG0MWSLS7T9gx0GAbcIzxBcf4hk18afAYc2sw/2Wnq7r7KX9hv6oDbafBeRutlEQR6qo6darOpb7zVXn0h39NPx965Q0Ep/y+MdfI8B3XkNc34X865Xs25vr7k4e3v3UNBUMe31PPc7/PO+b6tzfo+mH8j38YDQZDQ5jrC465JkOhF9+53cGJSe+0Jzjsf+H1YeQXf2DaE0Iz8MwdfBHwep4GJ73e0PRz9907d75xT3umfK6hCf9LX2jM9ZevXUMvfVP/fOl9QB3ffOsaHw1OjY+GxlmtoLc32f6hcaaNukPjo27R3x2L1PT2Ml9LGlrUOca3YywW5atVa7Vyy/O+Fe8TWC3wzbyzl0HfaqG7qBrnyTfvW8p/lY0BCkjUVHeY8oavlK1YCqJPv7xBo7plrUeYusCVNAnf8g7QSUOsprLWLLT9Mvb0tvejGoWBK51bz/qEruxf6UDT5JjnzwMXlPPtBafGnt2eHLAvcghPpcxOGdpI3ixV4PvfwjN884gs05vz1k6DpRIsUmXJPMttY1TXEsKl+3NGOmpszBnxBlcTJGmcxtl+jJ8XByxpxo7M0hxT+iKr1zVD3blpLIwVWazJIjWW2DZyedZcNSsHbHHFyNVZ5NwZHbP8GsNiTlph6QVDq/DEPiyk/i880y++59kyDbL2CosUZF+3Q6sihWCu3lF5pmFLt8J6fcOKvMHaTH7Dfgj2lPelIkvPwW1mpWFkivAQK7WwDrmZr0aoH1s0ikljtiE82t6zYkv4MDtpM11AkrL0omhWinxPOkDdNUtxXStgb+bFHIR54oLH9yBDa/FMxzjNkpEIwiD3y90guw111dwpUsSFqfUEv1ANLY8hpzPhd/I1wq9rWUoa2MHDGk8eisWVKN9K44OfxXiiQD3wEj7MTgxz3XxTMbRlIZFK6839bugG7lBvLkBOryf1+qmuzYusSyvACp5tiDTTlrHzD3cYEIAyMkzy5EQR6njTulw3kmVdW7M9+7Pf/w+AILWF6kjVWImYMxnSKzaYbhrF+evTaMj2JVYT/x/jJ/ifoVee5wDYuy73+OiE/7k/MBR49vOY6+HDO/Kf6A489PtCJMfUeQCblJ30BILebvfIV/dEn1vqlPj7XfCFZwK4DIANegOvvK7xL/40cud7Mvv33sD43WHb4yJu8Yap1s1OBkkKt1qzF7yxxtI5+MpIzrNcm6kyAQsF43jrM/LSV10vseUZI75gp6ZwUbjO8yn4h5U39HoYDhS+ukwytYMP8+yIKe8EaMzHkbJsX7V255Cj/OTSTkKjdQCE+Pjo9biwNwu2sAmQqDTEkVTSbhxC1BGcWMAFQmh21pxrtDbY0hpb3OnP8msVWa/HhTk95IWxAvrrdUL/D08javt1uV/zVhhlFih8zFJLRqEoFM2ewFrxUQI8SpiWpVHAucCEHHav15tG5sIsvYUYz8bYqUATqDLyQL8lCw49jQMSWAvluR95eztguS2sxF9HWPSih9MK05rG8bwA7y5WVZm6QQVfrLEbZaksv5jh5QqaNEvXaizcAmAORlUCxq5PJLOBxbrtWrirE+YVTVYSo63yxV2peVngYCsMpwyyQTqJxdoQNQ/3jOYBoSaa/GQbISaCJEY7bzEKSaZUAZR94ciJs2oHBWkgUm1g2bSTiPLRqQkBYafpvyJbnCNXtqKypKPsbJYVsixx5pR78uMDoG4XY/dbODsi9WQBpOxwTiDPwptAZNQ7ptRRQfAtLNrf4PFl2GKFw4gzIvPoPsIG9B7gTb2Zue4Eiidynm9t3lD0ZAqBkcAcxJ0ymMqtsa6ZahklmedRzvuST9AmmXZEFUg9Fkehttb3RQ5JNoIeQ3vHVxS+Xcc56DP82skFfeSLNxXnyKnQHdaQHbBH/A4MLfIbnmNKGRLd43htBcpCNrMhR/tNijfAg3vDylUeCCN6EYfd5uWlIKgy9BhiSRylX43skrWqApZwvEEl6OQ7Ms3KRVEZaQFM/FiayD0OPoZIEPNtlTgNcTckm1nLm52c0716/bXYIAgntj/QYayZ4ZkqbiiIGEQfPaYo2LN4os23a2ia7RPjMM+VGmmDON9uif4S2BpIaxubdS7PIsdCUTllaHPEp0wJC045sYNIYXCG2Os6J5mVGpwsQDZTdY7pDQmomwprIl3mWDRCy38oB4ohGBVZzHMVcGWRM9IjZiVvVvb0ZpMMtZOZl1JgC7S2Fb4EMab8v64ENqPqAV6JopJzSUBiI7TiBsHULSAzfq1M2HY6dGPLRNy6KqUmWyWlsC3P4ot6fV+vH2Giru0RaoBPIwmJ0EvmTB08c4nEvJ5TvzfHEpfs/zfJI1ddVUVZnfXODp8p2UHthjBTRUIBGkSSp9aQELYA5YRxrgHm+NvX1jogJmpFFm1chCdtItFNK5x9EPsuIKSTLFUGkOK0CJQHS8rt+kMeKpWyxVZw348Isr4S1VuCAyDm1t6WsXCEj0dP7lM5EYmQyFr58+tLizh+2kxd0gdQOCIfKE3iOgtfdWmFMnIPZ4BauGEDZN+3FsDFAFHW8VqXN4LDg3nNn/QmdeHq0z8E4PDhlvCcfBIiCNI0lsDbj0hiAopsGbDEFsvGMVjXqd4oy+7uO4CUI/D89N11bxglThQjSXHprQeH9vGPP6HQ6Y0DGsVBfPC3n2xGSGzA3BG0HUMTgSAN2XDCEkWa6ABgJ2wQyIAq8WT3Je9z8fvdYRRXtlQkxk/1+HOxHUcUhicKn5fVOGmRMx4+BHG2dtdw3yYW+761MTJMhVPcMuS7nC1Cl3GcR6qvdIOlebI2FkCJ3UbmHE+IAu57OunU4c2nd2fGOD+bBWcWFLEnZaebfSpxz68f8JV1vNSx0wO9sU0iV8/4OOamqmI/fPUdX99AE9sQjw01vBofdpuSAeOJgoRtAVPtmGVFNPGGKn1gqkVTbfZ09hFqwT6B4xKYcBnCTQgLs51jFl2Hlp73+qbR9dJGMrNUM0vgxdEbn6/FRQsYqGRZ45y9jTlt5mtFsY34O729TvHAvalPqKqAYwHFwM8HDN84jy42Tm20VWcviBK7VJ299KLi7LVmVV3ruykwebEESotySK/8A+9Jj+479ZFT2WWEJbb6xtIK/Ofs7d5K4Dm8KfWKC15truTc+MvU+P8AUEsDBBQAAAAIAIdO4kDOmYIutwIAAFUGAAAPAAAAeGwvd29ya2Jvb2sueG1spVVtb9owEP4+af8hs/hKnARoISJMvEWrVDpEWbtJSJVJHGI1sTPbGVTT/vvOCVC2ThXbvsQ+5+658/PcJf33uzyzvlGpmOABcm0HWZRHImZ8E6BPy7DZRZbShMckE5wG6Ikq9H7w9k1/K+TjWohHCwC4ClCqdeFjrKKU5kTZoqAc3iRC5kSDKTdYFZKSWKWU6jzDnuNc4JwwjmoEX56DIZKERXQiojKnXNcgkmZEQ/kqZYU6oMXrKtERc0vX9rZQdsQxNXGei/cuh4g8Ojq/comcyMeyaEYiLyDpmmVMP1VlICuP/KsNF5KsMyBq53YOyLB9AZ2zSAolEm0DFK6v9YIh18GuW5M06Ccso3e1UBYpihuSmywZsjKi9DRmmsYBaoEptvT5AIqQZTEqWQZvey3HQ3hw1G4uwYCyh5mmkhNNx4Jr4HWvyP8yUmGPUwGKWQv6tWSSQqMYYgZ9eJLIJ2s1Jzq1SpkFKPRX9/Nb62Ml8cr1bOhG2+s67daq5udidcIoeSnXX3BKIsMDhrvX9dX733kY9E2H3zG6Vc+kGdPaMh6L7T2LdRogr9t1YG7qsw+UbVINo+S1LjtVkhOMqicBq1otXkl4awbChSkz6xWoBHvpM9jIq9itEA5hMU0Yp7GRHkBOrD3Uwy7juf0QMqPnhGiyJoqajohIVqUx8FBpyuKYmnFHgzr7u8aw4fmNWaPV7uMTXKDlxIKcABTNpWWWqtSe63g9UyPd6WulqxXUZAH6Pup0R06r5zXboRs2227PaY5GF+1mZxK2OpfuZDzthD+OghrE5B+npIuraEp0CR1mmquyffMM96fHw6Q+2DP2S8v4i4m5yj76Ncdb+Dxm9Ezn8O5Mx/HNbDk70/d6uny4D891Hs5Gk+H5/sPFYvhlOf18SIH/SCgGzaFBDsrjwx9h8BNQSwMEFAAAAAgAh07iQC6J7dASDwAAh4AAAA0AAAB4bC9zdHlsZXMueG1s3V1tj+NWFf6OxH+wUoEoIuPYeZ+dzHYmM5YqVajqLgiprVaZxJmxcOJgO9uZokoLbdm2qEiowEJVidJqWT6wC5SKLqXd/pkmO/uJv8C512/nxtfOzUycOOxIG9u5556355z7muudq6cDU7qp245hDVsFZatUkPRh1+oZw+NW4QfXtWKjIDluZ9jrmNZQbxXOdKdwdfeb39hx3DNTv3ai664EVQydVuHEdUfbsux0T/RBx9myRvoQvulb9qDjwq19LDsjW+/0HEI0MGW1VKrJg44xLHg1bA+6IpUMOvaPx6Ni1xqMOq5xZJiGe0brKkiD7vazx0PL7hyZIOqp3QxqhstY1QOja1uO1Xe3oCrZ6veNrh6TUKnJtn7TINZpFnZ3huOBNnAdqWuNh26r0AgfSd43z/ZahYpSkDyl21YPxLghfVd66ntPPVW6IV0h1y8V8d23fzK23CtF74OWeOaGVJADVrhedbZej+i/X931LjCb2FeYa+xL74GQEOVZIXyuW6UZ/aIHTO1Xr6YrWZmtPyYstV5Qe+xbX8/E7xcRRqnXWGnO4J9XweTfn3oXA+9j+sFb3kXPv7/jO+XKM1xnKvU6W3WkVUJ5iEOMqtKNp6+8+ILee/ml75ReejqBBvDP0BCrRGRw51HKPqx3d/rWMEK3Wgd4kye7O86r0s2OCflBIZy6lmnZkgthDvCmT4adge6VmDz45ddfvkdLnXRsB7KDR1iukGc0N/glBwZEKnkoezxmOKkRJ/v4qFXQtBL9Rx6LsrtMzY/vv/3486+oEBxFmJqPiGaBhbKTG9k+xSIXlXvptYcWEat5acApCQFnATONsXv5ymiaECypaPNjYA7DBsRBg1Y1Nw4EGaa4ygu7ZWrHREsjcpafT8pCvBTRfGKkO6+ukT8hloK2ZNSrZq0ew42ajknOSzYmww1FQjauS0FlWStr0DiLNAUXcRtSzc+0hGE5O5zEGWp79YPSUoM8yXm+hhr9t0yTpvhvddot1EsRxEqKYjCkUZbrthRmzTa0BEuNglRmtWr2mvnuWirweUotFxa0N+hAZ9kwzXBwWC6T7jM82d2Bgaqr20MNbiT/+vrZCDrPQxhTk5CTvXJzSh/bnTNFpW2KGIFjmUaPSHHcpl12FOrtNuF75H9hDHv6qQ6D1xrtpstIYFHhEnm1283minipGvythtdelfythle7dqi1D1fDS9Pa9dXxOtxvZo1DP9IprjOEe8hGcg0yNVTaqjebzYZSazQazUpZWT3/KvBvlhvNmgpilLKGalz/MrCvV6uNqtJUK0rWKcDnvyI1q4X1uhnxX4ubEf+1uJl2erKPZpj+W2s0I/5rcTPivxY31zNu8/ykAVOxa3Uz4r8WNyP+a3EznQTKPpphBn2tbkb81+JmxH8tbl5RFwAWPdbqZsR/LW5G/C/pZjrIhGHtkWX3YIVY8lc9FbLs6T3b3TH1vgsDSds4PiGfrjUiw0rLdWFNdXenZ3SOrWHHhEs5oAg+CSUsLcMqcqvgnsAqcLCwFFvckElRn4cgBZWHiiNIAIIHcgtSeErO1xF0p9IIVhtJnjND5lUcQbuKukuwOgRJMAygR5Aue5zlRBxBeyA7ClJEASJIgEwOtpmXkqDIxcJ106URlH8ZcbSvkj/SuRdN7YhCzP+IAPk/TUdEIapjgBX4BCbwv0cYcBnoPWM8CNu1cIqE6J0xi7ALVCGzUJV6pVSvVNWaZ3NR3oEevNY5WjgVdSGiEHMhIhB0IaJYho7Rop+ojohCTEdEIKgjolhUx541ho1xIR5jS5s8LefSxPWcS8LRdC6NqK5zQpLPR9NgTwVdg71gXHIjhYn3+TozxdPU9XvS0DHv6qZ5jfSgf9QPe+cVsk/xtI82DsKWTrK3iuxNJJewCOVfej1x72Z3p2Max8OBPoQdW7rtGl2y36sLt7pNE/Vpf6baCt0KOK9eqTMamWca8KfcvTsQIbrbp6OL6H4vkCN69LxtuXrXpVtUS6DewqLSXYUbISrdsrcRknr7XDdDVLp1diNERcFKdnzyg9ULqu+PB0e6rdH91VGsaKsOLiQxAe9mSYwSImAkSogKfEFzVYKRmXyWQcZCRiWibJhVYZvwxolMUsRmYVchDTBPZGL+NPAyGSJj8JKWN+8ywmomX0bARF7smCTjnDzFuHoFPS2ct8iPJ3zXA1JRboW7FLNmDEjyuwtfKsAmkgru1icVautZqdZqK9SeA/6QreBubbZSk9pDBQCXIpXGxEK2KFOTGkAF4JcXGVGLB5aLvJueUvazH66hJKKiNg5Ml1MhUSMHgZxTIVELAnGdUyFRm0H6vRsgJUR6TqVEDleYwU2uAhxLyXQTciUlxiXTQOdWSrDrBuAyvw0PxmV+Wx6My/w2PVjK/LY9yOOkj5n/6CG9zJxKiTyu5rftwVLmt+3BuMxv24OlhOsNwCV4fwOkzG/bgz2e37YHS5nftgdlonJ+2x4sZX7bHuTx8trbHhmv0Xsr9nixXrnQYr102r/oqj2AK9gMkDhHBacm+fV7c1Xe6j0UpzNX+/4EUHCPZtKINp1g+V46sWzjVVgoIxsJyDa/guDGgnyJKL1id0bX9VPYv+DtEIlthPCPCfKWl4WNyi4sBsZcsalXITqGhNjOEgQANEfJpEWwlxhGF+fuH83kuTOJPzxn+a/anfNhKWBF6POyWmQAP9j4VFiKsND1zYmwSp0s1/hbqtAEdTpCc42QpLQFbWnmRvc3mS0EkiR5hfOC15YJtV10hyOn8VpI4KREAl2qpRg4llkXkg5iK1gUTQfxEhJEkjnJruhY2yqQxFbp8nkyZm3HNXt58cZ0hf67gG02I5HPA11SalllYMzPNkK2hskONhvmr9EU0iPWsdpQPWJ9rvzpgTKMcFdsCa3Ykge0wv2sxVOwUifbePzeqnC/aamOvkBqRm5Nym9QhE0WgVsXtxHilmShRG5zepKX0x3NZYEA0XR1Frl9EUjTTck+ptCsYLqMS8UUnl1adpcy1gwFyLrEDFgwyonh4aLNO4xB+fDPk5AXjRrs3aVbbt3BA0YJ8rFw7CQh8FK5LimzQoMhBq1Lcc9BbpvfbUW+urS1Mm0pIGetbAi/SEuBDJgkojDc1mLAxBQmBH66/gMrPujHmuxPNcP1IYmc5t0qTB4+PL/3BgrAo7FhwoE23oIPNBYxgndf//rLdydv/eLJ+78JyCDDITLvXOjgt6I+n/NP700e/iwgAGwjAnpY4Syfx394BEymfwuZQHcb0dCT92ZpJki2F0svB9xgWIEo6WFus5SeeIgGsgWioSeDxWj+9eaT9x5Nf3U34APZFdF4Z43PmGHy2SfnD756cufB4/ffOJ+lB8Aienp+0SzP6T//8uT2OwFDsgweuQs6SRx/nd//8+TX70x/d3v6wV8DOrIwjei846BnJJ1+ePvJR78PKOjuWETCNf/5vY9BuOmteyw38vsgxK7KxYfHTgrbSrqFFDHkes0nAjR57Qf5iRLiBLvfOQbxicIxM5yVyRBx/eYTQVGfE4sP77zJWWedP3pv8maIDvJ7ASQc7PniCEdIbn8ecmERARuweCQP/vT4wZ2QhMUE7IbikEw/vjX9493Ju7+dvPn69MMvQloWF7AZnkPrQT5GS7ewRf5SuTE9/cft6a3/BOzofjJEwsXU5O6XYXk2a6hcSEw+exCWZ9EA7xfhqXPr518/vB+SsFhQuViYfPH5+d9fB4xP7t958tEH529/EsEWjktmnMwNYrX0LakopVbDYgX2aHBEr8yvhsVPmYuf2vxqWEzBLgeONBx1wrhUWWDBUdWcChKtElZDt6pEgPHeyTAbdIlWiaph81GZi7tEq0TVwBWK5zIfjnGshIkHzMBUwMVnolWialjMlrmYTbRKVA2L3DIXuYlWiaphkVvhIpeDlTCzllnMws/+F8FKVA2L2QoXs4lWiaphkQuHUHCkSbRKWA2YAbu6ws2OHKuAT7z2hpx+gMBW4WI2EStRNSxmK1zMJlolqoZFboWL3ESrRNWAfbBSXORyrAIQ860CVeEKuJhNtEpUDYvZKheziVaJqmGRW+UiN9EqUTUscqsUudG+Luja906j81egj0MfzD37f/bA/PD8l/DsppQTxIUKc4/xl0HYjREQZhjhUC3/FWI00mOvHvPfxIXVyprKm4ZlTv2bOVcodA8kJ5ke/RMefykuKEV98KIx+PFqynskErEE/IODdRmZeC94iEnWTTJ2YAAyDzD/6CNSKu1QPUaw+HFSzOljTFnOmUrJhYMTlaKZxXTJwyjkHKIqR5XQo9zI8ahwkffICtzmmeIS6ge2FAP1JSEcOiKTdLhCmySGEwYOzV2JJVcobYZZN9AC4jcdhGH2FEEsKZwKzAum0Gzxh32fewHFG1YyFX2R9ipbYwsDLxSDl/yFm53UWlKh+v9iaJG4vYiVSNRAv9slL3qmByCGc+ownurp/c7YdK+HX7YK0fXztg4vpS3f2OuSZUUYxPmlnzduWi6tqlWIrr3Salgas/Tn0VOqHpE66cls/snpMB6BN1Fvjw04ivGn1ebBfq2htovVSrNSrBweHBb3aqVGsVRqNw+rWklrquXXYCwRKXlowht34XxGl7477JUTy9Qpd1DCG37R0WNS+RN49bZuv2C9EhanY9ak4q4FP9zApekQOal037Adt22Z4wG8zduXhg7NkwjMTqw8HVcllacMQJxrrm2M9JAHHdKl0nhCzZB5XeuIDlvZ92syCCRKh/1KJuMjx6q1erPWaDeKNU07KFba5Vpxr91Wis3DPUU7UBqNansvzbFxR8FMNbRukbgsEGKeUlIdm2RJUf/OmBKm+FNko8yujY/iMqZ629G71rDHpZvvcYKS8RGxIrzEPkIK9XmSDT2GfEo6iZFEOOoc65qhm73nOke66YTs6NTJXKIfdsyxHhHRaRs5oiKDxzCLQb6DXyE958BYCj6lsW1AEjncrzcPDjW12CjtN4qVsl4tNqv7B5BT2vsHB1qzpJbarwE4B+bQ2T5VKq3CieuOtmWZvoW442wNjK5tOVbf3erCGxusft/o6rIzssF6zomuuwNTVkulptyUBx36jgaoZNsxoZTtJ14/gV6LnrUK6OY58mYI6jQZxAaNAiVkh5xce40w2f0fUEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAGAAAAX3JlbHMvUEsDBBQAAAAIAIdO4kB7OHa8/wAAAN8CAAALAAAAX3JlbHMvLnJlbHOtks9KxDAQxu+C7xDmvk13FRHZdC8i7E1kfYCYTP/QJhOSWe2+vUFRLNS6B4+Z+eab33xkuxvdIF4xpo68gnVRgkBvyHa+UfB8eFjdgkisvdUDeVRwwgS76vJi+4SD5jyU2i4kkV18UtAyhzspk2nR6VRQQJ87NUWnOT9jI4M2vW5QbsryRsafHlBNPMXeKoh7uwZxOIW8+W9vquvO4D2Zo0PPMyvkVJGddWyQFYyDfKPYvxD1RQYGOc9ydT7L73dKh6ytZi0NRVyFmFOK3OVcv3EsmcdcTh+KJaDN+UDT0+fCwZHRW7TLSDqEJaLr/yQyx8Tklnk+NV9IcvItq3dQSwMECgAAAAAAh07iQAAAAAAAAAAAAAAAAAkAAAB4bC9fcmVscy9QSwMEFAAAAAgAh07iQMhs2XLsAAAAugIAABoAAAB4bC9fcmVscy93b3JrYm9vay54bWwucmVsc62STWrDMBCF94XeQcy+lp2WUkrkbEoh29Y9gJDGloktCc30x7evcCFxIKQbbwRvBr33zUjb3c84iC9M1AevoCpKEOhNsL3vFHw0r3dPIIi1t3oIHhVMSLCrb2+2bzhozpfI9ZFEdvGkwDHHZynJOBw1FSGiz502pFFzlqmTUZuD7lBuyvJRpqUH1GeeYm8VpL19ANFMMSf/7x3atjf4EszniJ4vREjiacgDiEanDlnBny4yI8jL8ferxjud0L5zyttdUizL12A2a8JwfiM8rWKWcj6rawzVmgzfIR3IIfKJ41giOXeOMPLsx9W/UEsDBBQAAAAIAIdO4kCo8VpzZwEAAA0FAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbK2Uy04CMRSG9ya+w6RbM1NwYYxhYOFlqSTiA9T2wDT0lp6C8PaeKWACQYGMm0k67fm///y9DEYra4olRNTe1axf9VgBTnql3axmH5OX8p4VmIRTwngHNVsDstHw+mowWQfAgqod1qxJKTxwjrIBK7DyARzNTH20ItEwzngQci5mwG97vTsuvUvgUplaDTYcPMFULEwqnlf0e+MkgkFWPG4WtqyaiRCMliKRU7506oBSbgkVVeY12OiAN2SD8aOEduZ3wLbujaKJWkExFjG9Cks2uPJyHH1AToaqv1WO2PTTqZZAGgtLEVTQtqxAlYEkISYNP57/ZEsf4XL4LqO2+mLiApO3lzMPGpZZ5kz4ynBsRAT1niKdSOxMxxBBKGwAkjXVnvbuqByLvfWR1gb+3UAWPUFOdKmA52+/cwBZ5gTwy8f5p/fzzrDDtCn1ygrtzuDnLULafarp3vW+kba/LLzzwfNjNvwGUEsBAhQAFAAAAAgAh07iQKjxWnNnAQAADQUAABMAAAAAAAAAAQAgAAAAcVIAAFtDb250ZW50X1R5cGVzXS54bWxQSwECFAAKAAAAAACHTuJAAAAAAAAAAAAAAAAABgAAAAAAAAAAABAAAADaTwAAX3JlbHMvUEsBAhQAFAAAAAgAh07iQHs4drz/AAAA3wIAAAsAAAAAAAAAAQAgAAAA/k8AAF9yZWxzLy5yZWxzUEsBAhQACgAAAAAAh07iQAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAQAAAAAAAAAGRvY1Byb3BzL1BLAQIUABQAAAAIAIdO4kC7N9mvMAEAADQCAAAQAAAAAAAAAAEAIAAAACcAAABkb2NQcm9wcy9hcHAueG1sUEsBAhQAFAAAAAgAh07iQAk5wUFEAQAAXAIAABEAAAAAAAAAAQAgAAAAhQEAAGRvY1Byb3BzL2NvcmUueG1sUEsBAhQAFAAAAAgAh07iQB/sT91gAQAA/wIAABMAAAAAAAAAAQAgAAAA+AIAAGRvY1Byb3BzL2N1c3RvbS54bWxQSwECFAAKAAAAAACHTuJAAAAAAAAAAAAAAAAAAwAAAAAAAAAAABAAAACJBAAAeGwvUEsBAhQACgAAAAAAh07iQAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAQAAAAJlEAAHhsL19yZWxzL1BLAQIUABQAAAAIAIdO4kDIbNly7AAAALoCAAAaAAAAAAAAAAEAIAAAAE1RAAB4bC9fcmVscy93b3JrYm9vay54bWwucmVsc1BLAQIUABQAAAAIAIdO4kCzEtIrXAkAANgaAAAUAAAAAAAAAAEAIAAAACs0AAB4bC9zaGFyZWRTdHJpbmdzLnhtbFBLAQIUABQAAAAIAIdO4kAuie3QEg8AAIeAAAANAAAAAAAAAAEAIAAAAJ1AAAB4bC9zdHlsZXMueG1sUEsBAhQACgAAAAAAh07iQAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAQAAAA2i0AAHhsL3RoZW1lL1BLAQIUABQAAAAIAIdO4kAjasOT+QUAAMYYAAATAAAAAAAAAAEAIAAAAAEuAAB4bC90aGVtZS90aGVtZTEueG1sUEsBAhQAFAAAAAgAh07iQM6Zgi63AgAAVQYAAA8AAAAAAAAAAQAgAAAAuT0AAHhsL3dvcmtib29rLnhtbFBLAQIUAAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAEAAAAKoEAAB4bC93b3Jrc2hlZXRzL1BLAQIUABQAAAAIAIdO4kAudvVPzigAADgIAQAYAAAAAAAAAAEAIAAAANYEAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWxQSwUGAAAAABEAEQAHBAAACVQAAAAA";
+
+document.getElementById("btn-export").onclick = ()=>{
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,"0");
+  const dd = String(today.getDate()).padStart(2,"0");
+  const defaultDate = `${yyyy}-${mm}-${dd}`;
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay show";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <h3><i class="fa-solid fa-calendar-days"></i> 选择要导出的日期</h3>
+      <div class="form-item" style="margin-top:16px">
+        <label>日期</label>
+        <input type="date" id="export-date-picker" value="${defaultDate}" />
+      </div>
+      <div id="export-preview" style="font-size:13px;color:#64748b;margin:10px 0"></div>
+      <div style="text-align:right;margin-top:16px">
+        <button class="btn-gray act-cancel">取消</button>
+        <button class="btn-primary act-confirm"><i class="fa-solid fa-download"></i> 导出日报</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const dateInput = overlay.querySelector("#export-date-picker");
+  const preview = overlay.querySelector("#export-preview");
+
+  function updatePreview(){
+    const dateStr = dateInput.value;
+    if(!dateStr){ preview.textContent=""; return; }
+    const list = filterTodosByDate(dateStr);
+    preview.innerHTML = `当天共 <b>${list.length}</b> 条待办` +
+      (list.length? "：" + list.map(t=>esc(t.title)).join("、") : "（无待办记录）");
+  }
+  dateInput.addEventListener("change", updatePreview);
+  updatePreview();
+
+  overlay.querySelector(".act-cancel").onclick = ()=>overlay.remove();
+  overlay.querySelector(".act-confirm").onclick = ()=>{
+    const dateStr = dateInput.value;
+    if(!dateStr){ alert("请选择日期"); return; }
+    exportDailyReport(dateStr);
+    overlay.remove();
+  };
+};
+
+function filterTodosByDate(dateStr){
+  const target = dateStr.replace(/-/g,"/");
+  let list = data.todos;
+  if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)){
+    list = list.filter(t=>t.assignTo === currentUser.username);
+  }
+  return list.filter(t=>{
+    const st = (t.startTime||"").substring(0,10);
+    const et = (t.endTime||"").substring(0,10);
+    return st === target || et === target;
+  });
+}
+
+function exportDailyReport(dateStr){
   try{
-    await sendMail(receiverEmail, "逸想待办 - 测试提醒邮件", "这是逸想待办系统发送的测试邮件，邮件功能正常。");
-    alert("✅邮件发送成功！");
-    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"success",msg:"个人测试邮件发送成功"});
-    saveData();
-    renderMailLog();
-  }catch(e){
-    alert("❌发送失败："+e.message);
-    data.mailLogs.push({time:getNowTimeStr(),to:receiverEmail,status:"fail",msg:"发送失败："+e.message});
-    saveData();
-    renderMailLog();
-  }
-}
-// ==========【新增】管理员：给选中成员发送邮件 ==========
-document.getElementById("btn-admin-send-member-mail").onclick = adminSendMemberMail;
-async function adminSendMemberMail(){
-  const selectedUserName = document.getElementById("selectMemberForMail").value;
-  const targetUser = data.users.find(u=>u.username === selectedUserName);
-  if(!targetUser){alert("找不到该成员");return;}
-  if(!targetUser.email){alert("该成员尚未绑定邮箱，无法发送邮件");return;}
-  const mailContent = document.getElementById("adminMailContent").value.trim();
-  if(!mailContent){alert("邮件内容不能为空");return;}
-  const receiverEmail = targetUser.email;
-  try{
-    await sendMail(receiverEmail, "逸想待办 - 管理员发送提醒", mailContent);
-    alert(`✅邮件成功发送给成员【${targetUser.username}】`);
-    data.mailLogs.push({
-      time:getNowTimeStr(),
-      to:receiverEmail,
-      status:"success",
-      msg:`管理员${currentUser.username}向成员${targetUser.username}发送邮件`
+    const wb = XLSX.read(DAILY_REPORT_TEMPLATE_B64, {type:"base64"});
+    const ws = wb.Sheets["Sheet1"];
+
+    const list = filterTodosByDate(dateStr);
+    const rowData = {};
+
+    list.forEach(t=>{
+      const row = t.workRow || 33;
+      if(!rowData[row]) rowData[row] = {plan:0, done:0, totalMin:0, notes:[]};
+      rowData[row].plan++;
+      if(t.status === "finish") rowData[row].done++;
+      if(t.useMin) rowData[row].totalMin += t.useMin;
+      const noteText = t.note || t.title || "";
+      if(noteText) rowData[row].notes.push(noteText);
     });
-    saveData();
-    renderMailLog();
-  }catch(e){
-    alert(`❌发送失败：${e.message}`);
-    data.mailLogs.push({
-      time:getNowTimeStr(),
-      to:receiverEmail,
-      status:"fail",
-      msg:`管理员${currentUser.username}发送给${targetUser.username}失败，原因：${e.message}`
+
+    // E=计划量, F=完成量, H=实际时长(小时), K=备注；G/I/J公式保留
+    Object.keys(rowData).forEach(r=>{
+      const row = Number(r);
+      const d = rowData[r];
+      const hours = Math.round(d.totalMin/60*100)/100;
+      XLSX.utils.sheet_add_aoa(ws, [[d.plan, d.done, undefined, hours, undefined, undefined, d.notes.join("\n")]], {origin: `E${row}`});
     });
-    saveData();
-    renderMailLog();
+
+    XLSX.utils.sheet_add_aoa(ws, [[dateStr]], {origin: "D1"});
+
+    const wbout = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+    const blob = new Blob([wbout], {type:"application/octet-stream"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `日报_${dateStr}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert("✅日报已导出："+`日报_${dateStr}.xlsx`);
+  }catch(e){
+    alert("❌导出失败："+e.message);
+    console.error(e);
   }
-}
-//一键批量提醒所有有未完成任务的成员
-document.getElementById("btn-batch-remind").onclick = batchRemind;
-async function batchRemind(){
-  const members = data.users.filter(u=>!u.isAdmin && u.email);
-  if(members.length === 0){alert("没有绑定邮箱的成员");return;}
-  if(!confirm("确认要给所有有未完成任务的成员批量发送提醒邮件吗？")) return;
-  let successCount = 0;
-  let failCount = 0;
-  let skipCount = 0;
-  for(const member of members){
-    const memberTodos = data.todos.filter(t=>t.assignTo === member.username);
-    const unfinishedTodos = memberTodos.filter(t=>t.status !== "finish");
-    if(unfinishedTodos.length === 0){
-      skipCount++;
-      continue;
-    }
-    //生成邮件内容
-    const waitTodos = unfinishedTodos.filter(t=>t.status === "wait");
-    const doingTodos = unfinishedTodos.filter(t=>t.status === "doing");
-    let mailContent = `您好 ${member.username}：\n\n您有${unfinishedTodos.length}项未完成的待办任务，请及时处理：\n\n`;
-    if(waitTodos.length > 0){
-      mailContent += `【未开始（${waitTodos.length}项）】\n`;
-      waitTodos.forEach((t,i)=>{
-        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
-      });
-      mailContent += "\n";
-    }
-    if(doingTodos.length > 0){
-      mailContent += `【进行中（${doingTodos.length}项）】\n`;
-      doingTodos.forEach((t,i)=>{
-        mailContent += `${i+1}. [${t.category}] ${t.title}\n`;
-      });
-      mailContent += "\n";
-    }
-    mailContent += "请尽快跟进，逾期任务会自动标红提醒。\n—— 逸想待办系统自动发送";
-    try{
-      await sendMail(member.email, "逸想待办 - 待办任务提醒", mailContent);
-      successCount++;
-      data.mailLogs.push({
-        time:getNowTimeStr(),
-        to:member.email,
-        status:"success",
-        msg:`批量提醒发送给${member.username}，未完成任务${unfinishedTodos.length}项`
-      });
-    }catch(e){
-      failCount++;
-      data.mailLogs.push({
-        time:getNowTimeStr(),
-        to:member.email,
-        status:"fail",
-        msg:`批量提醒发送给${member.username}失败：${e.message}`
-      });
-    }
-  }
-  saveData();
-  renderMailLog();
-  alert(`✅批量提醒完成\n成功发送：${successCount}人\n无待办跳过：${skipCount}人\n发送失败：${failCount}人`);
-}
+};
+
+// ============ 按钮绑定 ============
+document.getElementById("login-btn").onclick = login;
+document.getElementById("show-register-link").onclick = showRegisterModal;
 document.getElementById("btn-ai-note").onclick = aiImproveNote;
 document.getElementById("btn-gen-report").onclick = generateReport;
-document.getElementById("btn-export").onclick = exportData;
-function exportData(){
-  let list = data.todos;
-  if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)) {
-    list = data.todos.filter(t=> t.assignTo === currentUser.username);
+
+// 自动定时刷新：每分钟刷新一次列表，自动判断逾期
+setInterval(()=>{
+  if(currentUser && !document.getElementById("page-main").classList.contains("hidden")){
+    // 不刷新筛选下拉框，只刷新列表数据
+    renderTodoList();
   }
-  const group = {};
-  list.forEach(t=>{
-    if(!group[t.category]) group[t.category] = {count:0,totalMin:0,items:[]};
-    group[t.category].count++;
-    if(t.useMin) group[t.category].totalMin += t.useMin;
-    group[t.category].items.push(t);
-  })
-  let txt = "逸想待办-导出记录\n====================\n";
-  Object.keys(group).forEach(cat=>{
-    txt += `【大类：${cat}】任务总数：${group[cat].count}，总耗时：${group[cat].totalMin}分钟\n`;
-    group[cat].items.forEach(it=>{
-      txt += `·${it.title}｜${it.priority==="high"?"高优先级":it.priority==="mid"?"中优先级":"低优先级"}｜状态:${it.status}\n备注：${it.note}\n开始:${it.startTime} 完成:${it.endTime} 用时:${it.useMin??"-"}分钟\n\n`
-    })
-  })
-  const blob = new Blob([txt],{type:"text/plain;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "逸想待办_任务汇总.txt";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-//页面加载时，如果配置了云端，自动静默拉取最新数据（不自动刷新，避免死循环）
+}, 60000); // 每分钟
+
+// ============ 页面加载 ============
 window.onload = async function(){
   if(data.cloudConfig?.binId && data.cloudConfig?.apiKey){
-    //每次打开页面强制拉取云端最新数据，保证所有设备立刻同步新成员/待办
     console.log("正在从云端同步最新数据...");
     await fetchCloudData();
   }
-  //强制硬编码配置，不被旧数据覆盖
-  data.mailConfig = {
-    serviceId:"YinYifei021011",
-    templateId:"template_jftljpv",
-    publicKey:"hGimZnujSUONkURfm"
-  };
-  data.aiConfig = {
-    baseUrl:"https://api.siliconflow.cn/v1",
-    apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu",
-    model:"Qwen/Qwen2.5-7B-Instruct"
-  };
-  //自动初始化EmailJS
+  // 强制使用硬编码配置
+  data.mailConfig = { serviceId:"YinYifei021011", templateId:"template_jftljpv", publicKey:"hGimZnujSUONkURfm" };
+  data.aiConfig = { baseUrl:"https://api.siliconflow.cn/v1", apiKey:"sk-umzuekzcpbzxfolrtepikigbvofjkesvyhsfoqyafnrlrlyu", model:"Qwen/Qwen2.5-7B-Instruct" };
   emailjs.init(data.mailConfig.publicKey);
-  //自动登录
   const savedUser = localStorage.getItem("_logged_user");
   if(savedUser){
     const user = data.users.find(u=>u.username===savedUser);
@@ -1424,7 +1554,7 @@ window.onload = async function(){
       showMainPage();
     }
   }
-}
+};
 </script>
 </body>
 </html>
