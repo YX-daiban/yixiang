@@ -185,11 +185,14 @@
           </div>
           <div class="form-item">
             <label>优先级</label>
-            <select id="todo-priority">
-              <option value="high">🔴 高优先级</option>
-              <option value="mid" selected>🟠 中优先级</option>
-              <option value="low">🟢 低优先级</option>
-            </select>
+            <div class="combo-wrap">
+              <div id="priority-select-box" class="combo-select-box">
+                <span id="priority-select-text">🟠 中优先级</span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div id="priority-combo-dropdown" class="combo-dropdown hidden" style="max-height:none"></div>
+            </div>
+            <input type="hidden" id="todo-priority" value="mid">
           </div>
           <div class="form-item">
             <label>任务状态</label>
@@ -204,7 +207,7 @@
             <textarea id="todo-note" placeholder="填写工作简述，可基于备注生成工作汇报"></textarea>
             <button id="btn-ai-note" class="btn-purple" style="margin-top:10px"><i class="fa-solid fa-wand-magic-sparkles"></i> 优化备注</button>
           </div>
-          <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 时间格式：XXXX/XX/XX XX:XX｜Alt+S 填充开始时间｜Alt+E 填充完成时间</div>
+          <div class="tip-text"><i class="fa-regular fa-lightbulb"></i> 时间格式：XXXX/XX/XX XX:XX｜选中时间框后按 Ctrl+;（Mac用 ⌘+;）自动填充当前时间</div>
           <div class="row">
             <div class="form-item"><label>开始时间（选填）</label><input id="todo-start" placeholder="例如：2026/09/20 08:30" /></div>
             <div class="form-item"><label>完成时间</label><input id="todo-end" placeholder="完成后填写" /></div>
@@ -244,7 +247,13 @@
             <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
             <button id="btn-reset-filter" class="btn-gray"><i class="fa-solid fa-rotate-right"></i> 重置筛选</button>
           </div>
-          <h2><i class="fa-solid fa-clipboard-list"></i> 当日明细记录</h2>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h2 style="margin:0"><i class="fa-solid fa-clipboard-list"></i> 当日明细记录</h2>
+            <div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
+              <label style="font-size:13px;color:#64748b">筛选日期：</label>
+              <input type="date" id="filter-date" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
+            </div>
+          </div>
           <div id="todo-list"></div>
           <div class="summary-block">
             <h2 style="margin-top:0"><i class="fa-solid fa-chart-simple"></i> 当日大类汇总统计</h2>
@@ -268,6 +277,7 @@
             <div class="tip-text" style="margin:0 0 10px 0">换电脑或清缓存前，先点导出备份保存JSON文件；新电脑打开后点导入备份，就能恢复所有账号、待办和邮箱配置。</div>
             <button id="btn-export-backup" class="btn-teal"><i class="fa-solid fa-download"></i> 导出全部数据备份</button>
             <button id="btn-import-backup" class="btn-primary"><i class="fa-solid fa-upload"></i> 导入备份恢复数据</button>
+            <button id="btn-sync-cloud" class="btn-gray"><i class="fa-solid fa-cloud-arrow-down"></i> 从云端同步最新数据</button>
             <input type="file" id="import-backup-file" accept=".json" style="display:none" />
           </div>
           <h2 style="margin-top:24px"><i class="fa-solid fa-envelope"></i> 我的收件邮箱</h2>
@@ -526,8 +536,14 @@ document.addEventListener("change",function(e){
   }
 });
 document.addEventListener("keydown",e=>{
-  if(e.altKey && e.key.toLowerCase()==="s"){e.preventDefault();const el=document.getElementById("todo-start");if(el)el.value=getNowTimeStr();}
-  if(e.altKey && e.key.toLowerCase()==="e"){e.preventDefault();const el=document.getElementById("todo-end");if(el)el.value=getNowTimeStr();}
+  // Ctrl+; 或 Cmd+; 填充当前焦点的时间框（和WPS一致，Mac用Cmd）
+  if((e.ctrlKey || e.metaKey) && e.key === ";"){
+    e.preventDefault();
+    const active = document.activeElement;
+    if(active && (active.id === "todo-start" || active.id === "todo-end")){
+      active.value = getNowTimeStr();
+    }
+  }
   if(e.key === "Enter"){
     const loginPage = document.getElementById("page-login");
     if(!loginPage.classList.contains("hidden")) login();
@@ -585,11 +601,15 @@ function setSelectedWorkItem(item){
   }
 }
 
-function renderWorkItemDropdown(){
+function renderWorkItemDropdown(keyword){
   const comboDrop = document.getElementById("category-combo-dropdown");
-  let html = "";
+  keyword = (keyword||"").trim();
+  let html = `<div style="padding:8px 10px;border-bottom:1px solid #f1f5f9">
+    <input id="work-item-search" placeholder="输入关键字搜索..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box">
+  </div>`;
   let lastGroup = "";
-  WORK_ITEMS.forEach(item=>{
+  const list = WORK_ITEMS.filter(item=>!keyword || item.name.includes(keyword));
+  list.forEach(item=>{
     if(item.group !== lastGroup){
       html += `<div style="padding:10px 14px 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">${esc(item.group)}</div>`;
       lastGroup = item.group;
@@ -599,13 +619,76 @@ function renderWorkItemDropdown(){
       <span>${esc(item.name)}</span>${selected?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}
     </div>`;
   });
+  if(list.length === 0){
+    html += `<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">没有匹配的工作事项</div>`;
+  }
+  // 底部自定义事项
+  html += `<div style="border-top:1px solid #f1f5f9;margin-top:4px;padding-top:4px">
+    <div class="combo-item" id="custom-work-item">
+      <i class="fa-solid fa-pen-to-square" style="margin-right:8px;color:#6366f1"></i> 自定义事项（自己输入）
+    </div>
+  </div>`;
   comboDrop.innerHTML = html;
   comboDrop.querySelectorAll(".combo-item[data-row]").forEach(el=>{
-    el.onclick = ()=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
       setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name});
       comboDrop.classList.add("hidden");
     };
   });
+  // 自定义事项：点击后选择框变成可输入
+  document.getElementById("custom-work-item").onclick = (e)=>{
+    e.stopPropagation();
+    comboDrop.classList.add("hidden");
+    // 把选择框变成输入框
+    const box = document.getElementById("category-select-box");
+    const textEl = document.getElementById("category-select-text");
+    box.innerHTML = `<input id="custom-work-input" placeholder="请输入自定义工作事项名称" style="flex:1;border:none;outline:none;font-size:14px;color:#0f172a;background:transparent">`;
+    const input = document.getElementById("custom-work-input");
+    input.focus();
+    const finishCustom = ()=>{
+      const val = input.value.trim();
+      if(val){
+        setSelectedWorkItem({row:0, name:val});
+      }else{
+        textEl.textContent = "请选择工作事项";
+        box.classList.add("placeholder");
+        box.innerHTML = `<span id="category-select-text">请选择工作事项</span><i class="fa-solid fa-chevron-down"></i>`;
+      }
+    };
+    input.onblur = finishCustom;
+    input.onkeydown = (ev)=>{ if(ev.key==="Enter") finishCustom(); };
+  };
+  // 搜索框：只更新列表，不重新渲染整个dropdown
+  const searchInput = document.getElementById("work-item-search");
+  searchInput.oninput = ()=>{
+    const kw = searchInput.value;
+    // 只更新列表部分，保留搜索框和焦点
+    let listHtml = "";
+    let lastG = "";
+    const filtered = WORK_ITEMS.filter(item=>!kw.trim() || item.name.includes(kw.trim()));
+    filtered.forEach(item=>{
+      if(item.group !== lastG){
+        listHtml += `<div style="padding:10px 14px 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">${esc(item.group)}</div>`;
+        lastG = item.group;
+      }
+      const sel = _selectedWorkItem && _selectedWorkItem.row === item.row;
+      listHtml += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}"><span>${esc(item.name)}</span>${sel?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}</div>`;
+    });
+    if(filtered.length === 0){
+      listHtml = `<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">没有匹配的工作事项</div>`;
+    }
+    // 替换列表（搜索框之后的内容）
+    const existing = comboDrop.querySelectorAll(".combo-item, [style*='padding:10px 14px 4px'], [style*='padding:16px;text-align:center'], [style*='border-top:1px solid']");
+    existing.forEach(el=>el.remove());
+    comboDrop.insertAdjacentHTML("beforeend", listHtml + `<div style="border-top:1px solid #f1f5f9;margin-top:4px;padding-top:4px"><div class="combo-item" id="custom-work-item"><i class="fa-solid fa-pen-to-square" style="margin-right:8px;color:#6366f1"></i> 自定义事项（自己输入）</div></div>`);
+    comboDrop.querySelectorAll(".combo-item[data-row]").forEach(el=>{
+      el.onclick = (e)=>{ e.stopPropagation(); setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name}); comboDrop.classList.add("hidden"); };
+    });
+    document.getElementById("custom-work-item").onclick = (e)=>{ e.stopPropagation(); comboDrop.classList.add("hidden"); const box2 = document.getElementById("category-select-box"); const textEl2 = document.getElementById("category-select-text"); box2.innerHTML = `<input id="custom-work-input" placeholder="请输入自定义工作事项名称" style="flex:1;border:none;outline:none;font-size:14px;color:#0f172a;background:transparent">`; const inp = document.getElementById("custom-work-input"); inp.focus(); const fin = ()=>{ const v = inp.value.trim(); if(v){ setSelectedWorkItem({row:0, name:v}); }else{ box2.innerHTML = `<span id="category-select-text">请选择工作事项</span><i class="fa-solid fa-chevron-down"></i>`; box2.classList.add("placeholder"); } }; inp.onblur = fin; inp.onkeydown = (ev2)=>{ if(ev2.key==="Enter") fin(); }; };
+  };
+  searchInput.onclick = (e)=>e.stopPropagation();
+  setTimeout(()=>searchInput.focus(), 50);
   comboDrop.classList.remove("hidden");
 }
 
@@ -615,10 +698,45 @@ document.getElementById("category-select-box").onclick = function(){
   else drop.classList.add("hidden");
 };
 document.addEventListener("click",function(e){
-  const comboWrap = document.querySelector(".combo-wrap");
-  const comboDrop = document.getElementById("category-combo-dropdown");
-  if(comboDrop && !comboWrap.contains(e.target)) comboDrop.classList.add("hidden");
+  document.querySelectorAll(".combo-dropdown").forEach(d=>{
+    const wrap = d.closest(".combo-wrap");
+    if(wrap && !wrap.contains(e.target)) d.classList.add("hidden");
+  });
 });
+
+// ============ 优先级自定义下拉 ============
+const PRIORITY_OPTIONS = [
+  {value:"high", label:"🔴 高优先级", color:"#ef4444"},
+  {value:"mid", label:"🟠 中优先级", color:"#f97316"},
+  {value:"low", label:"🟢 低优先级", color:"#22c55e"}
+];
+let _selectedPriority = "mid";
+function renderPriorityDropdown(){
+  const drop = document.getElementById("priority-combo-dropdown");
+  drop.innerHTML = PRIORITY_OPTIONS.map(opt=>`
+    <div class="combo-item" data-val="${opt.value}">
+      <span>${opt.label}</span>
+      ${_selectedPriority===opt.value?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}
+    </div>
+  `).join("");
+  drop.querySelectorAll(".combo-item").forEach(el=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
+      _selectedPriority = el.dataset.val;
+      const opt = PRIORITY_OPTIONS.find(o=>o.value===_selectedPriority);
+      document.getElementById("priority-select-text").textContent = opt.label;
+      document.getElementById("todo-priority").value = _selectedPriority;
+      drop.classList.add("hidden");
+    };
+  });
+  drop.classList.remove("hidden");
+}
+document.getElementById("priority-select-box").onclick = function(e){
+  e.stopPropagation();
+  const drop = document.getElementById("priority-combo-dropdown");
+  if(drop.classList.contains("hidden")) renderPriorityDropdown();
+  else drop.classList.add("hidden");
+};
 
 // ============ AI 优化备注 ============
 async function aiImproveNote(){
@@ -1019,6 +1137,9 @@ function fillFormForEdit(todo){
     setSelectedWorkItem(null);
   }
   document.getElementById("todo-priority").value = todo.priority;
+  _selectedPriority = todo.priority;
+  const priOpt = PRIORITY_OPTIONS.find(o=>o.value===todo.priority);
+  if(priOpt) document.getElementById("priority-select-text").textContent = priOpt.label;
   document.getElementById("todo-status").value = todo.status;
   document.getElementById("todo-note").value = todo.note || "";
   document.getElementById("todo-start").value = todo.startTime || "";
@@ -1033,6 +1154,9 @@ function cancelEdit(){
   document.getElementById("edit-banner").classList.add("hidden");
   ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
   setSelectedWorkItem(null);
+  _selectedPriority = "mid";
+  document.getElementById("todo-priority").value = "mid";
+  document.getElementById("priority-select-text").textContent = "🟠 中优先级";
 }
 document.getElementById("btn-cancel-edit").onclick = cancelEdit;
 
@@ -1071,16 +1195,19 @@ function addTodo(){
   // 批量下发
   if(currentUser.isAdmin && assignTarget === "__all__"){
     data.users.filter(u=>!u.isAdmin).forEach(m=>{
-      data.todos.push({ id:genTodoId(), createUser:currentUser.username, assignTo:m.username, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
+      data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo:m.username, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
     });
     saveData(); alert("✅任务批量下发全部普通成员"); renderTodoList(); return;
   }
   const assignTo = (currentUser.isAdmin && assignTarget) ? assignTarget : currentUser.username;
-  data.todos.push({ id:genTodoId(), createUser:currentUser.username, assignTo, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
+  data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
   saveData();
   alert(`新增待办【${title}】`);
   ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
   setSelectedWorkItem(null);
+  _selectedPriority = "mid";
+  document.getElementById("todo-priority").value = "mid";
+  document.getElementById("priority-select-text").textContent = "🟠 中优先级";
   renderTodoList();
 }
 document.getElementById("btn-add-todo").onclick = addTodo;
@@ -1104,15 +1231,40 @@ document.getElementById("btn-reset-filter").onclick = ()=>{
   document.getElementById("filter-status").value="";
   renderTodoList();
 };
+document.getElementById("filter-date").onchange = ()=>renderTodoList();
+document.getElementById("btn-sync-cloud").onclick = async ()=>{
+  await fetchCloudData();
+  renderTodoList();
+  alert("已从云端同步最新数据");
+};
 
 // ============ 渲染待办列表 ============
 function renderTodoList(){
   const wrap = document.getElementById("todo-list");
   const summaryWrap = document.getElementById("summary-list");
 
+  // 日期选择器：默认不填，显示全部；选了日期才筛选
+  const dateInput = document.getElementById("filter-date");
+  const todayStr = new Date().toISOString().slice(0,10);
+
   let list = data.todos;
   if(!currentUser.isAdmin && !hasPermission(PERM.viewAllTodo)){
     list = list.filter(item=>item.assignTo === currentUser.username);
+  }
+
+  // 按日期筛选：开始时间属于选定日期（不选日期则显示全部）
+  const filterDateVal = document.getElementById("filter-date").value;
+  if(filterDateVal){
+    const dStart = new Date(filterDateVal + "T00:00:00").getTime();
+    const dEnd = dStart + 86400000;
+    list = list.filter(x=>{
+      if(x.startTime){
+        const st = parseTime(x.startTime);
+        return st >= dStart && st < dEnd;
+      }
+      // 未开始的待办：选今天就显示，选其他日期不显示
+      return filterDateVal === todayStr;
+    });
   }
 
   const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
@@ -1165,7 +1317,7 @@ function renderTodoList(){
       <div class="todo-title">
         <strong>${esc(item.title)}</strong>${priHtml}${statusHtml}
         <span class="category-tag"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>
-        <span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${esc(item.assignTo)}</span>
+        ${item.assignTo !== currentUser.username ? `<span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${esc(item.assignTo)}</span>` : ''}
       </div>
       <div style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${esc(item.note || "")}</div>
       <div class="meta-row">
