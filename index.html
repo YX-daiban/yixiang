@@ -252,6 +252,7 @@
             <div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
               <label style="font-size:13px;color:#64748b">筛选日期：</label>
               <input type="date" id="filter-date" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
+              <button id="btn-clear-date" class="btn-gray" style="padding:6px 10px;font-size:12px;display:none">清除筛选</button>
             </div>
           </div>
           <div id="todo-list"></div>
@@ -1231,7 +1232,15 @@ document.getElementById("btn-reset-filter").onclick = ()=>{
   document.getElementById("filter-status").value="";
   renderTodoList();
 };
-document.getElementById("filter-date").onchange = ()=>renderTodoList();
+document.getElementById("filter-date").onchange = ()=>{
+  document.getElementById("btn-clear-date").style.display = document.getElementById("filter-date").value ? "" : "none";
+  renderTodoList();
+};
+document.getElementById("btn-clear-date").onclick = ()=>{
+  document.getElementById("filter-date").value = "";
+  document.getElementById("btn-clear-date").style.display = "none";
+  renderTodoList();
+};
 document.getElementById("btn-sync-cloud").onclick = async ()=>{
   await fetchCloudData();
   renderTodoList();
@@ -1252,18 +1261,20 @@ function renderTodoList(){
     list = list.filter(item=>item.assignTo === currentUser.username);
   }
 
-  // 按日期筛选：开始时间属于选定日期（不选日期则显示全部）
+  // 按日期筛选：不选日期显示全部；选了日期显示那天开始的 + 所有未完成/已逾期的
   const filterDateVal = document.getElementById("filter-date").value;
   if(filterDateVal){
     const dStart = new Date(filterDateVal + "T00:00:00").getTime();
     const dEnd = dStart + 86400000;
     list = list.filter(x=>{
+      // 1. 那天开始的待办
       if(x.startTime){
         const st = parseTime(x.startTime);
-        return st >= dStart && st < dEnd;
+        if(st >= dStart && st < dEnd) return true;
       }
-      // 未开始的待办：选今天就显示，选其他日期不显示
-      return filterDateVal === todayStr;
+      // 2. 所有未完成的待办（不管哪天开始）都显示
+      if(x.status !== "finish") return true;
+      return false;
     });
   }
 
