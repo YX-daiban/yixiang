@@ -257,7 +257,10 @@
           </div>
           <div id="todo-list"></div>
           <div class="summary-block">
-            <h2 style="margin-top:0"><i class="fa-solid fa-chart-simple"></i> 当日大类汇总统计</h2>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <h2 style="margin-top:0"><i class="fa-solid fa-chart-simple"></i> 当日大类汇总统计</h2>
+              <span id="total-min-display" style="font-size:18px;color:#6366f1;font-weight:700;background:#eef2ff;padding:8px 18px;border-radius:12px"></span>
+            </div>
             <div id="summary-list"></div>
           </div>
         </div>
@@ -1356,9 +1359,16 @@ function renderTodoList(){
     if(t.useMin) group[t.category].totalMin += t.useMin;
   });
   let sumHtml = "";
+  let grandTotalMin = 0;
   Object.keys(group).forEach(cat=>{
+    grandTotalMin += group[cat].totalMin;
     sumHtml += `<div class="summary-group"><strong>${esc(cat)}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟</div>`;
   });
+  // 显示总时长
+  const h = Math.floor(grandTotalMin/60);
+  const m = grandTotalMin%60;
+  const totalText = h>0 ? `⏱ 共 ${h}小时${m}分钟` : `⏱ 共 ${m}分钟`;
+  document.getElementById("total-min-display").textContent = list.length ? totalText : "";
   summaryWrap.innerHTML = sumHtml || "<div>暂无数据汇总</div>";
 }
 
