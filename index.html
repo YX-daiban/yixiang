@@ -253,6 +253,7 @@
               <label style="font-size:13px;color:#64748b">筛选日期：</label>
               <input type="date" id="filter-date" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
               <button id="btn-clear-date" class="btn-gray" style="padding:6px 10px;font-size:12px;display:none">清除筛选</button>
+              <span id="list-total-min" style="font-size:15px;color:#6366f1;font-weight:700;background:#eef2ff;padding:6px 14px;border-radius:10px;margin-left:4px"></span>
             </div>
           </div>
           <div id="todo-list"></div>
@@ -1304,6 +1305,11 @@ function renderTodoList(){
   const finishCount = list.filter(x=>x.status==="finish").length;
   const doingCount = list.filter(x=>x.status==="doing" || x.status==="wait").length;
   const overdueCount = list.filter(x=>isItemOverdue(x)).length;
+
+  // 列表总时长
+  const listMin = list.reduce((s,x)=>s+(x.useMin||0),0);
+  const lh = Math.floor(listMin/60), lm = listMin%60;
+  document.getElementById("list-total-min").textContent = list.length ? (lh>0?`⏱ ${lh}小时${lm}分钟`:`⏱ ${lm}分钟`) : "";
 
   let html = `<div class="stat-row">
     <div class="stat-card stat-total stat-filter-card" data-filter="all" style="cursor:pointer"><div class="label">总任务数</div><div class="num">${totalCount}</div></div>
