@@ -89,7 +89,38 @@
     .log-item {font-size: 14px;color: #475569;padding: 12px;border-bottom: 1px dashed #e2e8f0;}
     .ai-result {background: #f8fafc;padding: 16px;border-radius: 16px;margin-top: 14px;white-space: pre-wrap;border: 1px solid #e2e8f0;line-height: 1.7;}
     .category-block {border: 1px solid #e2e8f0;border-radius: 16px;padding: 14px 16px;margin: 12px 0;display: flex;gap: 12px;align-items: center;justify-content: space-between;background: #fff;}
-    .filter-bar {background: rgba(255, 255, 255, 0.7);padding: 16px;border-radius: 18px;margin-bottom: 20px;border: 1px solid rgba(255, 255, 255, 0.9);}
+    .filter-bar{background:linear-gradient(180deg,#fff,#f8faff);border:1px solid #eef2ff;box-shadow:0 8px 24px rgba(99,102,241,.07);padding:18px 20px;border-radius:20px;margin-bottom:20px;}
+    .filter-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+    .filter-head h3{margin:0;font-size:15px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px;}
+    .filter-head h3 i{color:var(--pri1);font-size:13px;}
+    .filter-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .filter-actions button{margin:0;width:auto;flex:0 0 auto;padding:9px 18px;border-radius:12px;font-size:13px;}
+    .filter-row{gap:16px;}
+    .filter-row .form-item{margin-bottom:0;flex:1;min-width:180px;}
+    .filter-row label{font-size:12px;color:#64748b;font-weight:600;margin-bottom:6px;}
+    .fs-field{position:relative;}
+    .fs-select{height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer;font-size:13.5px;color:#0f172a;transition:all .2s;}
+    .fs-select:hover{border-color:#c7d2fe;background:#fff;}
+    .fs-select.open{border-color:var(--pri1);background:#fff;box-shadow:0 0 0 4px var(--priSoft);}
+    .fs-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fs-text.is-empty{color:#94a3b8;}
+    .fs-arrow{font-size:11px;color:#94a3b8;transition:transform .2s;flex:0 0 auto;}
+    .fs-select.open .fs-arrow{transform:rotate(180deg);color:var(--pri1);}
+    .fs-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border:1px solid #eef2ff;border-radius:14px;box-shadow:0 18px 44px rgba(71,85,105,.18);z-index:80;display:none;overflow:hidden;}
+    .fs-menu.open{display:block;}
+    .fs-options{max-height:248px;overflow-y:auto;padding:6px;}
+    .fs-option{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;color:#334155;cursor:pointer;}
+    .fs-option:hover{background:var(--priSoft);color:var(--priText);}
+    .fs-option.sel{background:var(--priSoft);color:var(--priText);font-weight:600;}
+    .fs-option .left{display:flex;align-items:center;min-width:0;}
+    .fs-option .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-right:9px;}
+    .fs-option .left span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .fs-option .check{color:var(--pri1);font-size:12px;visibility:hidden;flex:0 0 auto;}
+    .fs-option.sel .check{visibility:visible;}
+    .fs-search{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff;}
+    .fs-search i{color:#94a3b8;font-size:12px;flex:0 0 auto;}
+    .fs-search input{border:none;outline:none;background:transparent;flex:1;font-size:13px;color:#0f172a;padding:4px 0 !important;width:auto !important;}
+    .fs-empty{padding:14px;font-size:12.5px;color:#94a3b8;text-align:center;}
     .login-tip {color: #dc2626;margin-top: 14px;font-size: 14px;text-align: center;min-height:20px}
     .combo-wrap {position: relative;width: 100%;}
     .combo-input {width: 100%;padding: 12px 14px;border: 1px solid #e2e8f0;border-radius: 14px;font-size: 14px;background: #fff;transition: all 0.25s ease;}
@@ -124,6 +155,58 @@
       .row {flex-direction: column;}
       .brand-center-wrap{position:relative;left:unset;transform:none;margin:0 auto;}
     }
+
+    /* ===== 默认排版变量 ===== */
+    body{--pri1:#6366f1;--pri2:#4f46e5;--priSoft:#eef2ff;--priText:#4f46e5;--item-fs:15px;--item-radius:18px;--item-pad:18px;}
+    .btn-primary{background:linear-gradient(135deg,var(--pri1),var(--pri2));box-shadow:0 10px 24px rgba(99,102,241,0.25);}
+    .tab.active{background:linear-gradient(135deg,var(--pri1),var(--pri2));}
+    .stat-total .num{color:var(--priText);}
+    .category-tag{background:var(--priSoft)!important;color:var(--priText)!important;}
+    h2 i{color:var(--pri1);}
+    #list-total-min,#total-min-display{background:var(--priSoft);color:var(--priText);}
+    .todo-item:hover{border-color:var(--pri1);}
+    .todo-item{font-size:var(--item-fs);border-radius:var(--item-radius);padding:var(--item-pad);}
+    .todo-title strong{font-size:calc(var(--item-fs) + 1px);}
+    .stat-card{border-radius:calc(var(--item-radius) - 4px);}
+
+    /* ===== 美化日期筛选条 ===== */
+    .date-filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;}
+    .date-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #e2e8f0;font-size:13px;color:#334155;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(71,85,105,0.06);white-space:nowrap;}
+    .date-pill:hover{border-color:var(--pri1);box-shadow:0 6px 16px rgba(99,102,241,0.12);}
+    .date-pill i{color:var(--pri1);}
+    .date-pill.has-value{background:var(--priSoft);border-color:var(--pri1);color:var(--priText);font-weight:600;}
+    .date-filter-wrap{position:relative;display:inline-flex;align-items:center;gap:8px;}
+    #date-display{font-variant-numeric:tabular-nums;}
+    .clear-date-btn{width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:0;transition:all .2s;}
+    .clear-date-btn:hover{background:#fee2e2;color:#dc2626;}
+
+    /* ===== 自定义美化日历弹层 ===== */
+    .cal-pop{position:absolute;top:calc(100% + 10px);left:0;background:#fff;border:1px solid #eef2ff;border-radius:18px;box-shadow:0 24px 56px rgba(15,23,42,.18);padding:14px;z-index:80;display:none;width:288px;}
+    .cal-pop.show{display:block;animation:cal-in .18s ease;}
+    @keyframes cal-in{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+    .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    #cal-title{font-weight:700;font-size:14px;color:#0f172a;min-width:96px;text-align:center;}
+    .cal-nav{width:28px;height:28px;border-radius:50%;border:none;background:#f1f5f9;color:#475569;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;}
+    .cal-nav:hover{background:var(--priSoft);color:var(--priText);}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+    .cal-week span{text-align:center;font-size:11px;color:#94a3b8;padding:4px 0;}
+    .cal-cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:10px;cursor:pointer;color:#334155;transition:all .12s;}
+    .cal-cell:hover:not(.blank){background:var(--priSoft);}
+    .cal-cell.blank{cursor:default;}
+    .cal-cell.today{border:1px solid var(--pri1);color:var(--priText);font-weight:700;}
+    .cal-cell.sel{background:var(--pri1);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(99,102,241,.3);}
+    .cal-foot{display:flex;gap:8px;margin-top:12px;}
+    .cal-link{flex:1;background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:8px 10px;font-size:13px;cursor:pointer;}
+    .cal-link:hover{background:#e2e8f0;}
+    .cal-ok{flex:1;background:linear-gradient(135deg,var(--pri1),var(--pri2));color:#fff;border:none;border-radius:12px;padding:8px 10px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 6px 14px rgba(99,102,241,.25);}
+    .cal-ok:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+    .dur-chip{font-size:14px;font-weight:700;padding:8px 16px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+
+    /* ===== 撒花 ===== */
+    .confetti{position:fixed;top:-12px;width:10px;height:14px;z-index:2000;pointer-events:none;border-radius:2px;animation:fall linear forwards;}
+    @keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.2;}}
+    .finish-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#34d399,#10b981);color:#fff;padding:12px 24px;border-radius:999px;font-weight:700;box-shadow:0 14px 36px rgba(16,185,129,.4);z-index:2001;animation:pop .35s ease;}
+    @keyframes pop{from{transform:translateX(-50%) scale(.7);opacity:0;}to{transform:translateX(-50%) scale(1);opacity:1;}}
   </style>
 </head>
 <body>
@@ -219,49 +302,78 @@
           <div id="ai-output" class="ai-result hidden"></div>
           <hr class="divider" />
           <div class="filter-bar">
-            <h3 style="margin-top:0"><i class="fa-solid fa-filter"></i> 任务筛选</h3>
-            <div class="row">
-              <div class="form-item">
-                <label>任务状态</label>
-                <select id="filter-status">
-                  <option value="">全部状态</option>
-                  <option value="wait">未开始</option>
-                  <option value="doing">进行中</option>
-                  <option value="finish">已完成</option>
-                  <option value="overdue">已逾期</option>
-                </select>
-              </div>
-              <div class="form-item">
-                <label>优先级</label>
-                <select id="filter-priority">
-                  <option value="">全部优先级</option>
-                  <option value="high">🔴 高优先级</option>
-                  <option value="mid">🟠 中优先级</option>
-                  <option value="low">🟢 低优先级</option>
-                </select>
-              </div>
-              <div class="form-item">
-                <label>工作项筛选</label>
-                <select id="filter-category"><option value="">全部工作项</option></select>
+            <div class="filter-head">
+              <h3 style="margin:0"><i class="fa-solid fa-filter"></i> 任务筛选</h3>
+              <div class="filter-actions">
+                <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
+                <button id="btn-reset-filter" class="btn-gray"><i class="fa-solid fa-rotate-right"></i> 重置筛选</button>
               </div>
             </div>
-            <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
-            <button id="btn-reset-filter" class="btn-gray"><i class="fa-solid fa-rotate-right"></i> 重置筛选</button>
+            <div class="row filter-row">
+              <div class="form-item fs-field">
+                <label>任务状态</label>
+                <div class="fs-select" id="box-status" data-menu="menu-status">
+                  <span class="fs-text" id="text-status">全部状态</span>
+                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
+                </div>
+                <input type="hidden" id="filter-status" value="">
+                <div class="fs-menu" id="menu-status"><div class="fs-options"></div></div>
+              </div>
+              <div class="form-item fs-field">
+                <label>优先级</label>
+                <div class="fs-select" id="box-priority" data-menu="menu-priority">
+                  <span class="fs-text" id="text-priority">全部优先级</span>
+                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
+                </div>
+                <input type="hidden" id="filter-priority" value="">
+                <div class="fs-menu" id="menu-priority"><div class="fs-options"></div></div>
+              </div>
+              <div class="form-item fs-field">
+                <label>工作项筛选</label>
+                <div class="fs-select" id="box-category" data-menu="menu-category">
+                  <span class="fs-text" id="text-category">全部工作项</span>
+                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
+                </div>
+                <input type="hidden" id="filter-category" value="">
+                <div class="fs-menu" id="menu-category">
+                  <div class="fs-search"><i class="fa-solid fa-magnifying-glass"></i><input id="filter-category-search" type="text" placeholder="输入关键字搜索工作项" /></div>
+                  <div class="fs-options"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <h2 style="margin:0"><i class="fa-solid fa-clipboard-list"></i> 当日明细记录 <span id="view-member-tag" style="display:none;font-size:13px;color:#6366f1;background:#eef2ff;padding:4px 10px;border-radius:8px;margin-left:8px"></span></h2>
-            <div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
-              <label style="font-size:13px;color:#64748b">筛选日期：</label>
-              <input type="date" id="filter-date" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
-              <button id="btn-clear-date" class="btn-gray" style="padding:6px 10px;font-size:12px;display:none">清除筛选</button>
-              <span id="list-total-min" style="font-size:15px;color:#6366f1;font-weight:700;background:#eef2ff;padding:6px 14px;border-radius:10px;margin-left:4px"></span>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+            <h2 style="margin:0"><i class="fa-solid fa-clipboard-list"></i> 我的待办清单 <span id="view-member-tag" style="display:none;font-size:13px;color:#6366f1;background:#eef2ff;padding:4px 10px;border-radius:8px;margin-left:8px"></span></h2>
+            <div class="date-filter-bar">
+              <div class="date-filter-wrap">
+                <button type="button" class="date-pill" id="date-pill" title="点击选择日期，确认后回看当天待办">
+                  <i class="fa-regular fa-calendar"></i>
+                  <span id="date-display">全部日期</span>
+                </button>
+                <button id="btn-clear-date" class="clear-date-btn" style="display:none" title="清除日期筛选"><i class="fa-solid fa-xmark"></i></button>
+                <!-- 自定义美化日历弹层 -->
+                <div class="cal-pop" id="cal-pop">
+                  <div class="cal-head">
+                    <button type="button" class="cal-nav" id="cal-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="cal-title">选择日期</span>
+                    <button type="button" class="cal-nav" id="cal-next"><i class="fa-solid fa-chevron-right"></i></button>
+                  </div>
+                  <div class="cal-grid cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+                  <div class="cal-grid" id="cal-days"></div>
+                  <div class="cal-foot">
+                    <button type="button" id="cal-today" class="cal-link"><i class="fa-regular fa-clock"></i> 今天</button>
+                    <button type="button" id="cal-confirm" class="cal-ok"><i class="fa-solid fa-check"></i> 确认</button>
+                  </div>
+                </div>
+              </div>
+              <span id="list-total-min" class="dur-chip"></span>
             </div>
           </div>
           <div id="todo-list"></div>
           <div class="summary-block">
             <div style="display:flex;align-items:center;justify-content:space-between">
               <h2 style="margin-top:0"><i class="fa-solid fa-chart-simple"></i> 当日大类汇总统计</h2>
-              <span id="total-min-display" style="font-size:18px;color:#6366f1;font-weight:700;background:#eef2ff;padding:8px 18px;border-radius:12px"></span>
+              <span id="total-min-display" class="dur-chip"></span>
             </div>
             <div id="summary-list"></div>
           </div>
@@ -417,6 +529,7 @@ async function fetchCloudData(){
 let currentUser = null;
 let filterStatusVal = "";
 let filterCatVal = "";
+const DF = { active:"", pending:"" }; // 日期筛选：active 已确认生效；pending 弹层内暂存未确认
 const PERM = { viewAllTodo:"viewAllTodo", manageCategory:"manageCategory", manageMember:"manageMember", viewMailLog:"viewMailLog", sendMail:"sendMail" };
 const permLabel = { viewAllTodo:"查看全员任务", manageCategory:"大类管理", manageMember:"成员管理", viewMailLog:"查看邮件日志", sendMail:"发送邮件提醒" };
 function hasPermission(permKey){
@@ -530,6 +643,7 @@ document.addEventListener("click",function(e){
     todo.endTime = getNowTimeStr();
     saveData();
     renderTodoList();
+    launchConfetti();
     return;
   }
   // 统计卡片点击筛选
@@ -1235,33 +1349,162 @@ function addTodo(){
 document.getElementById("btn-add-todo").onclick = addTodo;
 
 // ============ 筛选 ============
-// 初始化工作项筛选下拉框
-(function initWorkItemFilter(){
-  const sel = document.getElementById("filter-category");
-  WORK_ITEMS.forEach(w=>{
-    sel.innerHTML += `<option value="${esc(w.name)}">${esc(w.name)}</option>`;
-  });
-})();
+// ============ 筛选：自定义美化下拉（工作项带关键字搜索） ============
+const FS_OPTIONS = {
+  status:[
+    {v:"",t:"全部状态"},{v:"wait",t:"未开始"},{v:"doing",t:"进行中"},
+    {v:"finish",t:"已完成"},{v:"overdue",t:"已逾期"}
+  ],
+  priority:[
+    {v:"",t:"全部优先级",c:null},{v:"high",t:"高优先级",c:"#ef4444"},
+    {v:"mid",t:"中优先级",c:"#f97316"},{v:"low",t:"低优先级",c:"#22c55e"}
+  ]
+};
+const CAT_OPTIONS = [{v:"",t:"全部工作项"}].concat(WORK_ITEMS.map(w=>({v:w.name,t:w.name})));
 
+function fsRenderOptions(menuId, options, selectedVal, onPick){
+  const box=document.querySelector(`#${menuId} .fs-options`);
+  box.innerHTML = options.map(o=>`
+    <div class="fs-option ${o.v===selectedVal?'sel':''}" data-val="${esc(o.v)}">
+      <span class="left">${o.c?`<span class="dot" style="background:${o.c}"></span>`:""}<span>${esc(o.t)}</span></span>
+      <i class="fa-solid fa-check check"></i>
+    </div>`).join("") || '<div class="fs-empty">无匹配选项</div>';
+  box.querySelectorAll(".fs-option").forEach(el=>{
+    el.onclick=(e)=>{ e.stopPropagation(); onPick(el.dataset.val); };
+  });
+}
+function fsSetBox(boxId,textId,val,options){
+  const opt=options.find(o=>o.v===val)||options[0];
+  const txt=document.getElementById(textId);
+  txt.textContent=opt.t;
+  txt.classList.toggle("is-empty", !opt.v);
+}
+function fsCloseAll(exceptId){
+  document.querySelectorAll(".fs-menu.open").forEach(m=>{ if(m.id!==exceptId) m.classList.remove("open"); });
+  document.querySelectorAll(".fs-select.open").forEach(s=>{ if(s.dataset.menu!==exceptId) s.classList.remove("open"); });
+}
+function fsRenderCategory(kw){
+  const list=CAT_OPTIONS.filter(o=>!kw || o.v==="" || o.t.toLowerCase().includes(kw.toLowerCase()));
+  fsRenderOptions("menu-category", list, document.getElementById("filter-category").value, v=>{
+    filterCatVal=v;
+    document.getElementById("filter-category").value=v;
+    fsSetBox("box-category","text-category",v,CAT_OPTIONS);
+    fsCloseAll(); renderTodoList();
+  });
+}
+fsRenderOptions("menu-status", FS_OPTIONS.status, "", v=>{
+  filterStatusVal=v;
+  document.getElementById("filter-status").value=v;
+  fsSetBox("box-status","text-status",v,FS_OPTIONS.status);
+  fsCloseAll(); renderTodoList();
+});
+fsRenderOptions("menu-priority", FS_OPTIONS.priority, "", v=>{
+  document.getElementById("filter-priority").value=v;
+  fsSetBox("box-priority","text-priority",v,FS_OPTIONS.priority);
+  fsCloseAll(); renderTodoList();
+});
+fsRenderCategory("");
+document.getElementById("filter-category-search").oninput=(e)=>{ fsRenderCategory(e.target.value.trim()); };
+["box-status","box-priority","box-category"].forEach(bid=>{
+  document.getElementById(bid).onclick=(e)=>{
+    e.stopPropagation();
+    const menu=document.getElementById(document.getElementById(bid).dataset.menu);
+    const willOpen=!menu.classList.contains("open");
+    fsCloseAll(menu.id);
+    menu.classList.toggle("open",willOpen);
+    document.getElementById(bid).classList.toggle("open",willOpen);
+    if(bid==="box-category" && willOpen) document.getElementById("filter-category-search").focus();
+  };
+});
+document.addEventListener("click",()=>fsCloseAll());
 document.getElementById("btn-filter").onclick = ()=>{
   filterStatusVal = document.getElementById("filter-status").value;
   filterCatVal = document.getElementById("filter-category").value;
   renderTodoList();
 };
+// ===== 自定义美化日历日期筛选 =====
+let calYear, calMonth;  // 弹层当前展示年月（month 为 0 基）
+function pad2(n){ return String(n).padStart(2,"0"); }
+function toISO(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }
+function fmtDisp(iso){ if(!iso) return "全部日期"; const[y,m,d]=iso.split("-"); return `${y}/${m}/${d}`; }
+function refreshDateUI(){
+  const pill=document.getElementById("date-pill");
+  document.getElementById("date-display").textContent = fmtDisp(DF.active);
+  pill.classList.toggle("has-value", !!DF.active);
+  document.getElementById("btn-clear-date").style.display = DF.active ? "inline-flex" : "none";
+}
+function renderCalendar(){
+  document.getElementById("cal-title").textContent = `${calYear}年${calMonth+1}月`;
+  const firstDow = new Date(calYear, calMonth, 1).getDay();
+  const dim = new Date(calYear, calMonth+1, 0).getDate();
+  const now=new Date();
+  const todayISO = toISO(now.getFullYear(), now.getMonth(), now.getDate());
+  let html="";
+  for(let i=0;i<firstDow;i++) html+='<div class="cal-cell blank"></div>';
+  for(let d=1; d<=dim; d++){
+    const iso=toISO(calYear,calMonth,d);
+    const cls=["cal-cell"];
+    if(iso===todayISO) cls.push("today");
+    if(iso===DF.pending || iso===DF.active) cls.push("sel");
+    html+=`<div class="${cls.join(" ")}" data-date="${iso}">${d}</div>`;
+  }
+  document.getElementById("cal-days").innerHTML=html;
+  document.querySelectorAll("#cal-days .cal-cell:not(.blank)").forEach(cell=>{
+    cell.onclick=(e)=>{ e.stopPropagation(); DF.pending=cell.dataset.date; renderCalendar(); };
+  });
+  document.getElementById("cal-confirm").disabled = !DF.pending;
+}
+function openCalendar(){
+  const now=new Date();
+  const base = DF.pending || DF.active || toISO(now.getFullYear(),now.getMonth(),now.getDate());
+  const[y,m]=base.split("-"); calYear=+y; calMonth=+m-1;
+  renderCalendar();
+  document.getElementById("cal-pop").classList.add("show");
+}
+function closeCalendar(){ document.getElementById("cal-pop").classList.remove("show"); DF.pending=""; }
+
 document.getElementById("btn-reset-filter").onclick = ()=>{
   filterStatusVal=""; filterCatVal="";
+  window._statFilter="";
   document.getElementById("filter-status").value="";
+  document.getElementById("filter-priority").value="";
+  document.getElementById("filter-category").value="";
+  fsSetBox("box-status","text-status","",FS_OPTIONS.status);
+  fsSetBox("box-priority","text-priority","",FS_OPTIONS.priority);
+  fsSetBox("box-category","text-category","",CAT_OPTIONS);
+  const kw=document.getElementById("filter-category-search"); if(kw) kw.value="";
+  fsRenderCategory("");
+  fsCloseAll();
+  DF.active=""; DF.pending="";
+  refreshDateUI();
   renderTodoList();
 };
-document.getElementById("filter-date").onchange = ()=>{
-  document.getElementById("btn-clear-date").style.display = document.getElementById("filter-date").value ? "" : "none";
+document.getElementById("date-pill").onclick=(e)=>{
+  e.stopPropagation();
+  const pop=document.getElementById("cal-pop");
+  if(pop.classList.contains("show")) closeCalendar(); else openCalendar();
+};
+document.getElementById("cal-prev").onclick=(e)=>{ e.stopPropagation(); calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); };
+document.getElementById("cal-next").onclick=(e)=>{ e.stopPropagation(); calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); };
+document.getElementById("cal-today").onclick=(e)=>{ e.stopPropagation(); const n=new Date(); DF.pending=toISO(n.getFullYear(),n.getMonth(),n.getDate()); renderCalendar(); };
+document.getElementById("cal-confirm").onclick=(e)=>{
+  e.stopPropagation();
+  if(!DF.pending) return;
+  DF.active=DF.pending;
+  closeCalendar();
+  refreshDateUI();
   renderTodoList();
 };
-document.getElementById("btn-clear-date").onclick = ()=>{
-  document.getElementById("filter-date").value = "";
-  document.getElementById("btn-clear-date").style.display = "none";
+document.getElementById("btn-clear-date").onclick=(e)=>{
+  e.stopPropagation();
+  DF.active=""; DF.pending="";
+  refreshDateUI();
   renderTodoList();
 };
+document.addEventListener("click",(e)=>{
+  const pop=document.getElementById("cal-pop");
+  if(pop && pop.classList.contains("show") && !e.target.closest("#cal-pop") && !e.target.closest("#date-pill")) closeCalendar();
+});
 document.getElementById("btn-sync-cloud").onclick = async ()=>{
   await fetchCloudData();
   renderTodoList();
@@ -1273,31 +1516,31 @@ document.getElementById("member-search").oninput = ()=>renderMemberList();
 function renderTodoList(){
   const wrap = document.getElementById("todo-list");
   const summaryWrap = document.getElementById("summary-list");
-
-  // 日期选择器：默认不填，显示全部；选了日期才筛选
-  const dateInput = document.getElementById("filter-date");
-  const todayStr = new Date().toISOString().slice(0,10);
+  refreshDateUI();
 
   let list = data.todos;
   // 管理员默认只看自己的待办；在成员管理里点击某成员后才看该成员的
   const viewUser = window._viewMember || currentUser.username;
   list = list.filter(item=>item.assignTo === viewUser);
 
-  // 按日期筛选：不选日期显示全部；选了日期显示那天开始的 + 所有未完成/已逾期的
-  const filterDateVal = document.getElementById("filter-date").value;
+  // 视图模式：未确认日期=进行中视图（默认隐藏已完成）；确认日期后=历史视图（回看含已完成）
+  const filterDateVal = DF.active;
   if(filterDateVal){
     const dStart = new Date(filterDateVal + "T00:00:00").getTime();
     const dEnd = dStart + 86400000;
     list = list.filter(x=>{
-      // 1. 那天开始的待办
-      if(x.startTime){
-        const st = parseTime(x.startTime);
-        if(st >= dStart && st < dEnd) return true;
-      }
-      // 2. 所有未完成的待办（不管哪天开始）都显示
+      // 那天开始的
+      if(x.startTime){ const st = parseTime(x.startTime); if(st >= dStart && st < dEnd) return true; }
+      // 那天完成的
+      if(x.endTime){ const et = parseTime(x.endTime); if(et >= dStart && et < dEnd) return true; }
+      // 仍未完成的（持续跟进）
       if(x.status !== "finish") return true;
       return false;
     });
+  }else{
+    // 默认进行中视图：隐藏已完成；除非用户主动点了“已完成”状态筛选或完成统计卡片
+    const userPickedFinish = filterStatusVal === "finish" || window._statFilter === "finish";
+    if(!userPickedFinish) list = list.filter(x=>x.status !== "finish");
   }
 
   const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
@@ -1368,7 +1611,7 @@ function renderTodoList(){
         <span class="category-tag"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>
         ${item.assignTo !== currentUser.username ? `<span style="background:#dbeafe;padding:6px 8px;border-radius:10px;font-size:12px">指派给：${esc(item.assignTo)}</span>` : ''}
       </div>
-      <div style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${esc(item.note || "")}</div>
+      ${item.note ? `<div class="todo-note-line" style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${esc(item.note)}</div>` : ""}
       <div class="meta-row">
         <span><i class="fa-regular fa-clock"></i> 开始：${esc(item.startTime||"-")}</span>
         <span><i class="fa-regular fa-clock"></i> 完成：${esc(item.endTime||"-")}</span>
@@ -1405,6 +1648,29 @@ function renderTodoList(){
   const totalText = h>0 ? `⏱ 共 ${h}小时${m}分钟` : `⏱ 共 ${m}分钟`;
   document.getElementById("total-min-display").textContent = list.length ? totalText : "";
   summaryWrap.innerHTML = sumHtml || "<div>暂无数据汇总</div>";
+}
+
+
+// 完成撒花庆祝
+function launchConfetti(){
+  const colors = ["#6366f1","#22c55e","#f59e0b","#f43f5e","#06b6d4","#a855f7"];
+  for(let i=0;i<60;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random()*100 + "vw";
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (1.2 + Math.random()*1.2) + "s";
+    c.style.animationDelay = (Math.random()*0.3) + "s";
+    c.style.width = (6 + Math.random()*8) + "px";
+    c.style.height = (8 + Math.random()*10) + "px";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 2800);
+  }
+  const toast = document.createElement("div");
+  toast.className = "finish-toast";
+  toast.innerHTML = `<i class="fa-solid fa-party-horn"></i> 任务完成，继续加油！`;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 1800);
 }
 
 // ============ 全员任务 ============
