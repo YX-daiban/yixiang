@@ -86,6 +86,9 @@
     .summary-block {background: linear-gradient(135deg, #f0f9ff, #eef2ff);border: 1px solid #e0e7ff;border-radius: 20px;padding: 20px;margin-top: 24px;}
     .summary-group {margin: 12px 0;padding: 14px;background: #fff;border-radius: 16px;border: 1px solid #eef2ff;}
     .summary-group strong {color: #4f46e5;}
+    .summary-notes{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+    .summary-note{font-size:12.5px;color:#64748b;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+    .summary-note .note-idx{color:#818cf8;font-weight:600;margin-right:5px;}
     .log-item {font-size: 14px;color: #475569;padding: 12px;border-bottom: 1px dashed #e2e8f0;}
     .ai-result {background: #f8fafc;padding: 16px;border-radius: 16px;margin-top: 14px;white-space: pre-wrap;border: 1px solid #e2e8f0;line-height: 1.7;}
     .category-block {border: 1px solid #e2e8f0;border-radius: 16px;padding: 14px 16px;margin: 12px 0;display: flex;gap: 12px;align-items: center;justify-content: space-between;background: #fff;}
@@ -478,7 +481,7 @@ try{
   else { throw new Error("空"); }
 }catch(e){
   data = {
-    users: [{ username:"yinyifei", pwd:"admin123", isAdmin:true, email:"", permissions:{} }],
+    users: [{ username:"一页清单", pwd:"admin123", isAdmin:true, email:"", permissions:{} }],
     categories:[], todos:[], mailLogs:[],
     nextTodoId: 1,
     mailConfig:{ serviceId:"YinYifei021011", templateId:"template_jftljpv", publicKey:"hGimZnujSUONkURfm" },
@@ -487,6 +490,24 @@ try{
   };
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
+// 管理员账号统一更名为“一页清单”，同步历史待办归属与登录态（幂等，可重复执行）
+function migrateAdminName(){
+  const NEW_NAME = "一页清单";
+  if(!data.users || !data.users.length) return;
+  const admin = data.users.find(u=>u.isAdmin);
+  if(!admin || admin.username===NEW_NAME) return;
+  if(data.users.some(u=>u.username===NEW_NAME)) return; // 重名保护，避免覆盖已有账号
+  const oldName = admin.username;
+  admin.username = NEW_NAME;
+  (data.todos||[]).forEach(t=>{
+    if(t.createUser===oldName) t.createUser=NEW_NAME;
+    if(t.assignTo===oldName) t.assignTo=NEW_NAME;
+  });
+  if(localStorage.getItem("_logged_user")===oldName) localStorage.setItem("_logged_user",NEW_NAME);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  saveData();
+}
+migrateAdminName();
 if(window.HARDCODED_CLOUD){
   if(!data.cloudConfig) data.cloudConfig = {};
   data.cloudConfig.binId = window.HARDCODED_CLOUD.binId;
@@ -520,6 +541,7 @@ async function fetchCloudData(){
     if(result.record){
       data = result.record;
       localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      migrateAdminName();
       console.log("云端数据同步成功");
     }
   }catch(e){ console.log("云端拉取失败:",e); }
@@ -722,7 +744,16 @@ const WORK_ITEMS = [
   {group:"九、月度组内工作", row:33, name:"其他事项（请详细备注）"},
 ];
 
-let _selectedWorkItem = null; // {row, name}
+// 自定义大类（大类管理中添加）合并进工作事项下拉
+function getCustomCategories(){ return (data.categories||[]).map(c=>({row:0, name:c.name, group:"自定义大类", custom:true})); }
+function getAllWorkItems(){ return WORK_ITEMS.concat(getCustomCategories()); }
+function isWorkItemSelected(item){
+  if(!_selectedWorkItem) return false;
+  if(item.custom) return _selectedWorkItem.name===item.name;
+  return _selectedWorkItem.row===item.row && _selectedWorkItem.name===item.name;
+}
+
+let _selectedWorkItem = null; // {row, name, custom}
 
 function setSelectedWorkItem(item){
   _selectedWorkItem = item;
@@ -744,14 +775,14 @@ function renderWorkItemDropdown(keyword){
     <input id="work-item-search" placeholder="输入关键字搜索..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box">
   </div>`;
   let lastGroup = "";
-  const list = WORK_ITEMS.filter(item=>!keyword || item.name.includes(keyword));
+  const list = getAllWorkItems().filter(item=>!keyword || item.name.includes(keyword));
   list.forEach(item=>{
     if(item.group !== lastGroup){
       html += `<div style="padding:10px 14px 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">${esc(item.group)}</div>`;
       lastGroup = item.group;
     }
-    const selected = _selectedWorkItem && _selectedWorkItem.row === item.row;
-    html += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}">
+    const selected = isWorkItemSelected(item);
+    html += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}" ${item.custom?'data-custom="1"':''}>
       <span>${esc(item.name)}</span>${selected?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}
     </div>`;
   });
@@ -768,7 +799,7 @@ function renderWorkItemDropdown(keyword){
   comboDrop.querySelectorAll(".combo-item[data-row]").forEach(el=>{
     el.onclick = (e)=>{
       e.stopPropagation();
-      setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name});
+      setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name, custom:!!el.dataset.custom});
       comboDrop.classList.add("hidden");
     };
   });
@@ -802,14 +833,14 @@ function renderWorkItemDropdown(keyword){
     // 只更新列表部分，保留搜索框和焦点
     let listHtml = "";
     let lastG = "";
-    const filtered = WORK_ITEMS.filter(item=>!kw.trim() || item.name.includes(kw.trim()));
+    const filtered = getAllWorkItems().filter(item=>!kw.trim() || item.name.includes(kw.trim()));
     filtered.forEach(item=>{
       if(item.group !== lastG){
         listHtml += `<div style="padding:10px 14px 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">${esc(item.group)}</div>`;
         lastG = item.group;
       }
-      const sel = _selectedWorkItem && _selectedWorkItem.row === item.row;
-      listHtml += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}"><span>${esc(item.name)}</span>${sel?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}</div>`;
+      const sel = isWorkItemSelected(item);
+      listHtml += `<div class="combo-item" data-row="${item.row}" data-name="${esc(item.name)}" ${item.custom?'data-custom="1"':''}><span>${esc(item.name)}</span>${sel?'<i class="fa-solid fa-check" style="color:#6366f1"></i>':''}</div>`;
     });
     if(filtered.length === 0){
       listHtml = `<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px">没有匹配的工作事项</div>`;
@@ -819,7 +850,7 @@ function renderWorkItemDropdown(keyword){
     existing.forEach(el=>el.remove());
     comboDrop.insertAdjacentHTML("beforeend", listHtml + `<div style="border-top:1px solid #f1f5f9;margin-top:4px;padding-top:4px"><div class="combo-item" id="custom-work-item"><i class="fa-solid fa-pen-to-square" style="margin-right:8px;color:#6366f1"></i> 自定义事项（自己输入）</div></div>`);
     comboDrop.querySelectorAll(".combo-item[data-row]").forEach(el=>{
-      el.onclick = (e)=>{ e.stopPropagation(); setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name}); comboDrop.classList.add("hidden"); };
+      el.onclick = (e)=>{ e.stopPropagation(); setSelectedWorkItem({row:Number(el.dataset.row), name:el.dataset.name, custom:!!el.dataset.custom}); comboDrop.classList.add("hidden"); };
     });
     document.getElementById("custom-work-item").onclick = (e)=>{ e.stopPropagation(); comboDrop.classList.add("hidden"); const box2 = document.getElementById("category-select-box"); const textEl2 = document.getElementById("category-select-text"); box2.innerHTML = `<input id="custom-work-input" placeholder="请输入自定义工作事项名称" style="flex:1;border:none;outline:none;font-size:14px;color:#0f172a;background:transparent">`; const inp = document.getElementById("custom-work-input"); inp.focus(); const fin = ()=>{ const v = inp.value.trim(); if(v){ setSelectedWorkItem({row:0, name:v}); }else{ box2.innerHTML = `<span id="category-select-text">请选择工作事项</span><i class="fa-solid fa-chevron-down"></i>`; box2.classList.add("placeholder"); } }; inp.onblur = fin; inp.onkeydown = (ev2)=>{ if(ev2.key==="Enter") fin(); }; };
   };
@@ -1266,9 +1297,12 @@ function showMainPage(){
 // ============ 新增/编辑待办 ============
 function fillFormForEdit(todo){
   window._editingTodoId = Number(todo.id);
-  if(todo.workRow){
-    const item = WORK_ITEMS.find(w=>w.row===todo.workRow);
-    setSelectedWorkItem(item || {row:todo.workRow, name:todo.category});
+  const fixed = todo.workRow ? WORK_ITEMS.find(w=>w.row===todo.workRow) : null;
+  if(fixed){
+    setSelectedWorkItem({row:fixed.row, name:fixed.name});
+  }else if(todo.category){
+    const custom = (data.categories||[]).find(c=>c.name===todo.category);
+    setSelectedWorkItem(custom ? {row:0, name:custom.name, custom:true} : {row:0, name:todo.category});
   }else{
     setSelectedWorkItem(null);
   }
@@ -1360,7 +1394,7 @@ const FS_OPTIONS = {
     {v:"mid",t:"中优先级",c:"#f97316"},{v:"low",t:"低优先级",c:"#22c55e"}
   ]
 };
-const CAT_OPTIONS = [{v:"",t:"全部工作项"}].concat(WORK_ITEMS.map(w=>({v:w.name,t:w.name})));
+function getCatOptions(){ return [{v:"",t:"全部工作项"}].concat(WORK_ITEMS.map(w=>({v:w.name,t:w.name}))).concat(getCustomCategories().map(c=>({v:c.name,t:c.name}))); }
 
 function fsRenderOptions(menuId, options, selectedVal, onPick){
   const box=document.querySelector(`#${menuId} .fs-options`);
@@ -1384,11 +1418,11 @@ function fsCloseAll(exceptId){
   document.querySelectorAll(".fs-select.open").forEach(s=>{ if(s.dataset.menu!==exceptId) s.classList.remove("open"); });
 }
 function fsRenderCategory(kw){
-  const list=CAT_OPTIONS.filter(o=>!kw || o.v==="" || o.t.toLowerCase().includes(kw.toLowerCase()));
+  const list=getCatOptions().filter(o=>!kw || o.v==="" || o.t.toLowerCase().includes(kw.toLowerCase()));
   fsRenderOptions("menu-category", list, document.getElementById("filter-category").value, v=>{
     filterCatVal=v;
     document.getElementById("filter-category").value=v;
-    fsSetBox("box-category","text-category",v,CAT_OPTIONS);
+    fsSetBox("box-category","text-category",v,getCatOptions());
     fsCloseAll(); renderTodoList();
   });
 }
@@ -1471,7 +1505,7 @@ document.getElementById("btn-reset-filter").onclick = ()=>{
   document.getElementById("filter-category").value="";
   fsSetBox("box-status","text-status","",FS_OPTIONS.status);
   fsSetBox("box-priority","text-priority","",FS_OPTIONS.priority);
-  fsSetBox("box-category","text-category","",CAT_OPTIONS);
+  fsSetBox("box-category","text-category","",getCatOptions());
   const kw=document.getElementById("filter-category-search"); if(kw) kw.value="";
   fsRenderCategory("");
   fsCloseAll();
@@ -1632,15 +1666,19 @@ function renderTodoList(){
 
   const group = {};
   list.forEach(t=>{
-    if(!group[t.category]) group[t.category] = {count:0,totalMin:0};
+    if(!group[t.category]) group[t.category] = {count:0,totalMin:0,notes:[]};
     group[t.category].count++;
     if(t.useMin) group[t.category].totalMin += t.useMin;
+    if(t.note && String(t.note).trim()) group[t.category].notes.push(String(t.note).trim());
   });
   let sumHtml = "";
   let grandTotalMin = 0;
   Object.keys(group).forEach(cat=>{
     grandTotalMin += group[cat].totalMin;
-    sumHtml += `<div class="summary-group"><strong>${esc(cat)}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟</div>`;
+    const notesHtml = group[cat].notes.length
+      ? `<div class="summary-notes">${group[cat].notes.map((n,i)=>`<div class="summary-note"><span class="note-idx">${i+1}.</span><span>${esc(n)}</span></div>`).join("")}</div>`
+      : "";
+    sumHtml += `<div class="summary-group"><strong>${esc(cat)}</strong><br/>任务数量：${group[cat].count} | 总耗时：${group[cat].totalMin}分钟${notesHtml}</div>`;
   });
   // 显示总时长
   const h = Math.floor(grandTotalMin/60);
