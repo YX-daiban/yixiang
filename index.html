@@ -92,38 +92,6 @@
     .log-item {font-size: 14px;color: #475569;padding: 12px;border-bottom: 1px dashed #e2e8f0;}
     .ai-result {background: #f8fafc;padding: 16px;border-radius: 16px;margin-top: 14px;white-space: pre-wrap;border: 1px solid #e2e8f0;line-height: 1.7;}
     .category-block {border: 1px solid #e2e8f0;border-radius: 16px;padding: 14px 16px;margin: 12px 0;display: flex;gap: 12px;align-items: center;justify-content: space-between;background: #fff;}
-    .filter-bar{background:linear-gradient(180deg,#fff,#f8faff);border:1px solid #eef2ff;box-shadow:0 8px 24px rgba(99,102,241,.07);padding:18px 20px;border-radius:20px;margin-bottom:20px;}
-    .filter-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
-    .filter-head h3{margin:0;font-size:15px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px;}
-    .filter-head h3 i{color:var(--pri1);font-size:13px;}
-    .filter-actions{display:flex;gap:10px;flex-wrap:wrap;}
-    .filter-actions button{margin:0;width:auto;flex:0 0 auto;padding:9px 18px;border-radius:12px;font-size:13px;}
-    .filter-row{gap:16px;}
-    .filter-row .form-item{margin-bottom:0;flex:1;min-width:180px;}
-    .filter-row label{font-size:12px;color:#64748b;font-weight:600;margin-bottom:6px;}
-    .fs-field{position:relative;}
-    .fs-select{height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer;font-size:13.5px;color:#0f172a;transition:all .2s;}
-    .fs-select:hover{border-color:#c7d2fe;background:#fff;}
-    .fs-select.open{border-color:var(--pri1);background:#fff;box-shadow:0 0 0 4px var(--priSoft);}
-    .fs-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .fs-text.is-empty{color:#94a3b8;}
-    .fs-arrow{font-size:11px;color:#94a3b8;transition:transform .2s;flex:0 0 auto;}
-    .fs-select.open .fs-arrow{transform:rotate(180deg);color:var(--pri1);}
-    .fs-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border:1px solid #eef2ff;border-radius:14px;box-shadow:0 18px 44px rgba(71,85,105,.18);z-index:80;display:none;overflow:hidden;}
-    .fs-menu.open{display:block;}
-    .fs-options{max-height:248px;overflow-y:auto;padding:6px;}
-    .fs-option{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;color:#334155;cursor:pointer;}
-    .fs-option:hover{background:var(--priSoft);color:var(--priText);}
-    .fs-option.sel{background:var(--priSoft);color:var(--priText);font-weight:600;}
-    .fs-option .left{display:flex;align-items:center;min-width:0;}
-    .fs-option .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-right:9px;}
-    .fs-option .left span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .fs-option .check{color:var(--pri1);font-size:12px;visibility:hidden;flex:0 0 auto;}
-    .fs-option.sel .check{visibility:visible;}
-    .fs-search{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff;}
-    .fs-search i{color:#94a3b8;font-size:12px;flex:0 0 auto;}
-    .fs-search input{border:none;outline:none;background:transparent;flex:1;font-size:13px;color:#0f172a;padding:4px 0 !important;width:auto !important;}
-    .fs-empty{padding:14px;font-size:12.5px;color:#94a3b8;text-align:center;}
     .login-tip {color: #dc2626;margin-top: 14px;font-size: 14px;text-align: center;min-height:20px}
     .combo-wrap {position: relative;width: 100%;}
     .combo-input {width: 100%;padding: 12px 14px;border: 1px solid #e2e8f0;border-radius: 14px;font-size: 14px;background: #fff;transition: all 0.25s ease;}
@@ -286,6 +254,7 @@
             <select id="todo-status">
               <option value="wait">⏸ 未开始</option>
               <option value="doing">▶ 进行中</option>
+              <option value="paused">⏸ 已暂停</option>
               <option value="finish">✅ 已完成</option>
             </select>
           </div>
@@ -304,47 +273,6 @@
           <button id="btn-export" class="btn-teal"><i class="fa-solid fa-calendar-days"></i> 导出日报（选日期）</button>
           <div id="ai-output" class="ai-result hidden"></div>
           <hr class="divider" />
-          <div class="filter-bar">
-            <div class="filter-head">
-              <h3 style="margin:0"><i class="fa-solid fa-filter"></i> 任务筛选</h3>
-              <div class="filter-actions">
-                <button id="btn-filter" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 筛选任务</button>
-                <button id="btn-reset-filter" class="btn-gray"><i class="fa-solid fa-rotate-right"></i> 重置筛选</button>
-              </div>
-            </div>
-            <div class="row filter-row">
-              <div class="form-item fs-field">
-                <label>任务状态</label>
-                <div class="fs-select" id="box-status" data-menu="menu-status">
-                  <span class="fs-text" id="text-status">全部状态</span>
-                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
-                </div>
-                <input type="hidden" id="filter-status" value="">
-                <div class="fs-menu" id="menu-status"><div class="fs-options"></div></div>
-              </div>
-              <div class="form-item fs-field">
-                <label>优先级</label>
-                <div class="fs-select" id="box-priority" data-menu="menu-priority">
-                  <span class="fs-text" id="text-priority">全部优先级</span>
-                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
-                </div>
-                <input type="hidden" id="filter-priority" value="">
-                <div class="fs-menu" id="menu-priority"><div class="fs-options"></div></div>
-              </div>
-              <div class="form-item fs-field">
-                <label>工作项筛选</label>
-                <div class="fs-select" id="box-category" data-menu="menu-category">
-                  <span class="fs-text" id="text-category">全部工作项</span>
-                  <i class="fa-solid fa-chevron-down fs-arrow"></i>
-                </div>
-                <input type="hidden" id="filter-category" value="">
-                <div class="fs-menu" id="menu-category">
-                  <div class="fs-search"><i class="fa-solid fa-magnifying-glass"></i><input id="filter-category-search" type="text" placeholder="输入关键字搜索工作项" /></div>
-                  <div class="fs-options"></div>
-                </div>
-              </div>
-            </div>
-          </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px">
             <h2 style="margin:0"><i class="fa-solid fa-clipboard-list"></i> 我的待办清单 <span id="view-member-tag" style="display:none;font-size:13px;color:#6366f1;background:#eef2ff;padding:4px 10px;border-radius:8px;margin-left:8px"></span></h2>
             <div class="date-filter-bar">
@@ -549,8 +477,6 @@ async function fetchCloudData(){
 
 // ============ 权限 ============
 let currentUser = null;
-let filterStatusVal = "";
-let filterCatVal = "";
 const DF = { active:"", pending:"" }; // 日期筛选：active 已确认生效；pending 弹层内暂存未确认
 const PERM = { viewAllTodo:"viewAllTodo", manageCategory:"manageCategory", manageMember:"manageMember", viewMailLog:"viewMailLog", sendMail:"sendMail" };
 const permLabel = { viewAllTodo:"查看全员任务", manageCategory:"大类管理", manageMember:"成员管理", viewMailLog:"查看邮件日志", sendMail:"发送邮件提醒" };
@@ -618,7 +544,7 @@ document.addEventListener("click",function(e){
     renderTodoList();
     return;
   }
-  // 暂停待办（累计时长，清空开始时间）
+  // 暂停待办（累计本段工作时长，记录暂停时刻）
   if(target.classList.contains("btn-pause-todo")){
     const id = Number(target.dataset.id);
     const todo = data.todos.find(t=>Number(t.id)===id);
@@ -630,16 +556,34 @@ document.addEventListener("click",function(e){
       todo.useMin = (todo.useMin||0) + mins;
     }
     todo.status = "paused";
+    // 记录本次暂停时刻，供“暂停了多久 / 何时暂停”展示
+    const nowStr = getNowTimeStr();
+    todo.pauseTime = nowStr;
+    todo.pauseLog = todo.pauseLog || [];
+    todo.pauseLog.push({at: nowStr, back: "", dur: 0});
     // 保留startTime用于逾期判断，继续时会覆盖
     saveData();
     renderTodoList();
     return;
   }
-  // 继续待办（从暂停恢复进行中，重新计开始时间）
+  // 继续待办（从暂停恢复进行中，结算本次暂停时长，重新计开始时间）
   if(target.classList.contains("btn-resume-todo")){
     const id = Number(target.dataset.id);
     const todo = data.todos.find(t=>Number(t.id)===id);
     if(!todo) return;
+    // 闭合最后一段暂停，累计暂停时长
+    if(Array.isArray(todo.pauseLog)){
+      const last = todo.pauseLog[todo.pauseLog.length-1];
+      if(last && !last.back){
+        const ta = parseTime(last.at), tb = Date.now();
+        if(!isNaN(ta)){
+          const dur = Math.round((tb-ta)/60000);
+          last.back = getNowTimeStr(); last.dur = dur;
+          todo.pauseMin = (todo.pauseMin||0) + dur;
+        }
+      }
+    }
+    todo.pauseTime = "";
     todo.status = "doing";
     todo.startTime = getNowTimeStr();
     saveData();
@@ -660,6 +604,21 @@ document.addEventListener("click",function(e){
         todo.useMin = (todo.useMin||0) + mins;
       }
       todo.startTime = "";
+    }
+    // 如果当前是暂停状态，闭合最后一段暂停（暂停时间不计入工作时长）
+    else if(todo.status === "paused"){
+      if(Array.isArray(todo.pauseLog)){
+        const last = todo.pauseLog[todo.pauseLog.length-1];
+        if(last && !last.back){
+          const ta = parseTime(last.at), tb = Date.now();
+          if(!isNaN(ta)){
+            const dur = Math.round((tb-ta)/60000);
+            last.back = getNowTimeStr(); last.dur = dur;
+            todo.pauseMin = (todo.pauseMin||0) + dur;
+          }
+        }
+      }
+      todo.pauseTime = "";
     }
     todo.status = "finish";
     todo.endTime = getNowTimeStr();
@@ -1323,6 +1282,7 @@ function cancelEdit(){
   document.getElementById("btn-add-todo").innerHTML = '<i class="fa-solid fa-plus"></i> 添加待办记录';
   document.getElementById("edit-banner").classList.add("hidden");
   ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("todo-status").value = "wait";
   setSelectedWorkItem(null);
   _selectedPriority = "mid";
   document.getElementById("todo-priority").value = "mid";
@@ -1354,7 +1314,12 @@ function addTodo(){
     const todo = data.todos.find(t=>Number(t.id)===window._editingTodoId);
     if(todo){
       todo.title=title; todo.category=category; todo.priority=priority; todo.status=status;
-      todo.note=note; todo.startTime=st; todo.endTime=et; todo.useMin=useMin; todo.workRow=workRow;
+      todo.note=note; todo.startTime=st; todo.endTime=et; todo.workRow=workRow;
+      // 保留系统累计的工作时长、暂停记录与创建时间，不被表单首尾时间差覆盖；暂停段不计入工作时长
+      if(todo.useMin==null) todo.useMin=useMin;
+      todo.pauseMin = todo.pauseMin||0;
+      todo.pauseLog = todo.pauseLog||[];
+      if(!todo.createdAt) todo.createdAt = st || getNowTimeStr();
       saveData();
       alert("✅待办修改已保存");
       cancelEdit();
@@ -1365,15 +1330,16 @@ function addTodo(){
   // 批量下发
   if(currentUser.isAdmin && assignTarget === "__all__"){
     data.users.filter(u=>!u.isAdmin).forEach(m=>{
-      data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo:m.username, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
+      data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo:m.username, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow, createdAt:getNowTimeStr(), pauseMin:0, pauseLog:[] });
     });
     saveData(); alert("✅任务批量下发全部普通成员"); renderTodoList(); return;
   }
   const assignTo = (currentUser.isAdmin && assignTarget) ? assignTarget : currentUser.username;
-  data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow });
+  data.todos.unshift({ id:genTodoId(), createUser:currentUser.username, assignTo, title,category,priority,status,note,startTime:st,endTime:et,useMin,workRow, createdAt:getNowTimeStr(), pauseMin:0, pauseLog:[] });
   saveData();
   alert(`新增待办【${title}】`);
   ["todo-note","todo-start","todo-end"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("todo-status").value = "wait";
   setSelectedWorkItem(null);
   _selectedPriority = "mid";
   document.getElementById("todo-priority").value = "mid";
@@ -1382,80 +1348,6 @@ function addTodo(){
 }
 document.getElementById("btn-add-todo").onclick = addTodo;
 
-// ============ 筛选 ============
-// ============ 筛选：自定义美化下拉（工作项带关键字搜索） ============
-const FS_OPTIONS = {
-  status:[
-    {v:"",t:"全部状态"},{v:"wait",t:"未开始"},{v:"doing",t:"进行中"},
-    {v:"finish",t:"已完成"},{v:"overdue",t:"已逾期"}
-  ],
-  priority:[
-    {v:"",t:"全部优先级",c:null},{v:"high",t:"高优先级",c:"#ef4444"},
-    {v:"mid",t:"中优先级",c:"#f97316"},{v:"low",t:"低优先级",c:"#22c55e"}
-  ]
-};
-function getCatOptions(){ return [{v:"",t:"全部工作项"}].concat(WORK_ITEMS.map(w=>({v:w.name,t:w.name}))).concat(getCustomCategories().map(c=>({v:c.name,t:c.name}))); }
-
-function fsRenderOptions(menuId, options, selectedVal, onPick){
-  const box=document.querySelector(`#${menuId} .fs-options`);
-  box.innerHTML = options.map(o=>`
-    <div class="fs-option ${o.v===selectedVal?'sel':''}" data-val="${esc(o.v)}">
-      <span class="left">${o.c?`<span class="dot" style="background:${o.c}"></span>`:""}<span>${esc(o.t)}</span></span>
-      <i class="fa-solid fa-check check"></i>
-    </div>`).join("") || '<div class="fs-empty">无匹配选项</div>';
-  box.querySelectorAll(".fs-option").forEach(el=>{
-    el.onclick=(e)=>{ e.stopPropagation(); onPick(el.dataset.val); };
-  });
-}
-function fsSetBox(boxId,textId,val,options){
-  const opt=options.find(o=>o.v===val)||options[0];
-  const txt=document.getElementById(textId);
-  txt.textContent=opt.t;
-  txt.classList.toggle("is-empty", !opt.v);
-}
-function fsCloseAll(exceptId){
-  document.querySelectorAll(".fs-menu.open").forEach(m=>{ if(m.id!==exceptId) m.classList.remove("open"); });
-  document.querySelectorAll(".fs-select.open").forEach(s=>{ if(s.dataset.menu!==exceptId) s.classList.remove("open"); });
-}
-function fsRenderCategory(kw){
-  const list=getCatOptions().filter(o=>!kw || o.v==="" || o.t.toLowerCase().includes(kw.toLowerCase()));
-  fsRenderOptions("menu-category", list, document.getElementById("filter-category").value, v=>{
-    filterCatVal=v;
-    document.getElementById("filter-category").value=v;
-    fsSetBox("box-category","text-category",v,getCatOptions());
-    fsCloseAll(); renderTodoList();
-  });
-}
-fsRenderOptions("menu-status", FS_OPTIONS.status, "", v=>{
-  filterStatusVal=v;
-  document.getElementById("filter-status").value=v;
-  fsSetBox("box-status","text-status",v,FS_OPTIONS.status);
-  fsCloseAll(); renderTodoList();
-});
-fsRenderOptions("menu-priority", FS_OPTIONS.priority, "", v=>{
-  document.getElementById("filter-priority").value=v;
-  fsSetBox("box-priority","text-priority",v,FS_OPTIONS.priority);
-  fsCloseAll(); renderTodoList();
-});
-fsRenderCategory("");
-document.getElementById("filter-category-search").oninput=(e)=>{ fsRenderCategory(e.target.value.trim()); };
-["box-status","box-priority","box-category"].forEach(bid=>{
-  document.getElementById(bid).onclick=(e)=>{
-    e.stopPropagation();
-    const menu=document.getElementById(document.getElementById(bid).dataset.menu);
-    const willOpen=!menu.classList.contains("open");
-    fsCloseAll(menu.id);
-    menu.classList.toggle("open",willOpen);
-    document.getElementById(bid).classList.toggle("open",willOpen);
-    if(bid==="box-category" && willOpen) document.getElementById("filter-category-search").focus();
-  };
-});
-document.addEventListener("click",()=>fsCloseAll());
-document.getElementById("btn-filter").onclick = ()=>{
-  filterStatusVal = document.getElementById("filter-status").value;
-  filterCatVal = document.getElementById("filter-category").value;
-  renderTodoList();
-};
 // ===== 自定义美化日历日期筛选 =====
 let calYear, calMonth;  // 弹层当前展示年月（month 为 0 基）
 function pad2(n){ return String(n).padStart(2,"0"); }
@@ -1497,22 +1389,6 @@ function openCalendar(){
 }
 function closeCalendar(){ document.getElementById("cal-pop").classList.remove("show"); DF.pending=""; }
 
-document.getElementById("btn-reset-filter").onclick = ()=>{
-  filterStatusVal=""; filterCatVal="";
-  window._statFilter="";
-  document.getElementById("filter-status").value="";
-  document.getElementById("filter-priority").value="";
-  document.getElementById("filter-category").value="";
-  fsSetBox("box-status","text-status","",FS_OPTIONS.status);
-  fsSetBox("box-priority","text-priority","",FS_OPTIONS.priority);
-  fsSetBox("box-category","text-category","",getCatOptions());
-  const kw=document.getElementById("filter-category-search"); if(kw) kw.value="";
-  fsRenderCategory("");
-  fsCloseAll();
-  DF.active=""; DF.pending="";
-  refreshDateUI();
-  renderTodoList();
-};
 document.getElementById("date-pill").onclick=(e)=>{
   e.stopPropagation();
   const pop=document.getElementById("cal-pop");
@@ -1572,24 +1448,12 @@ function renderTodoList(){
       return false;
     });
   }else{
-    // 默认进行中视图：隐藏已完成；除非用户主动点了“已完成”状态筛选或完成统计卡片
-    const userPickedFinish = filterStatusVal === "finish" || window._statFilter === "finish";
+    // 默认进行中视图：隐藏已完成；除非用户点了完成统计卡片
+    const userPickedFinish = window._statFilter === "finish";
     if(!userPickedFinish) list = list.filter(x=>x.status !== "finish");
   }
 
   const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
-
-  // 下拉框筛选
-  if(filterStatusVal) list = list.filter(x=>{
-    if(filterStatusVal === "wait") return x.status === "wait";
-    if(filterStatusVal === "doing") return x.status === "doing";
-    if(filterStatusVal === "finish") return x.status === "finish";
-    if(filterStatusVal === "overdue") return isItemOverdue(x);
-    return true;
-  });
-  const filterPriorityVal = document.getElementById("filter-priority").value;
-  if(filterPriorityVal) list = list.filter(x=>x.priority===filterPriorityVal);
-  if(filterCatVal) list = list.filter(x=>x.category===filterCatVal);
 
   // 统计卡片点击筛选
   if(window._statFilter === "finish") list = list.filter(x=>x.status==="finish");
@@ -1638,6 +1502,9 @@ function renderTodoList(){
       ?'<span class="status-paused"><i class="fa-solid fa-pause"></i> 已暂停</span>'
       :'<span class="status-finish"><i class="fa-solid fa-check"></i> 已完成</span>';
     let isOverdue = isItemOverdue(item);
+    const createdAt = item.createdAt || item.startTime || "-";
+    const pauseMin = item.pauseMin || 0;
+    const lastPause = (Array.isArray(item.pauseLog) && item.pauseLog.length) ? item.pauseLog[item.pauseLog.length-1].at : "";
     html += `
     <div class="todo-item ${isOverdue?'overdue':''}">
       <div class="todo-title">
@@ -1647,9 +1514,12 @@ function renderTodoList(){
       </div>
       ${item.note ? `<div class="todo-note-line" style="color:#475569;line-height:1.7;white-space:pre-wrap">备注：${esc(item.note)}</div>` : ""}
       <div class="meta-row">
+        <span><i class="fa-regular fa-circle-plus"></i> 添加：${esc(createdAt)}</span>
         <span><i class="fa-regular fa-clock"></i> 开始：${esc(item.startTime||"-")}</span>
-        <span><i class="fa-regular fa-clock"></i> 完成：${esc(item.endTime||"-")}</span>
+        <span><i class="fa-regular fa-circle-check"></i> 完成：${esc(item.endTime||"-")}</span>
         <span><i class="fa-solid fa-hourglass-half"></i> 用时：${item.useMin ? item.useMin+"分钟":"-"}</span>
+        ${pauseMin>0?`<span><i class="fa-solid fa-pause"></i> 暂停：${pauseMin}分钟</span>`:""}
+        ${lastPause?`<span><i class="fa-regular fa-hand"></i> 暂停于：${esc(lastPause)}</span>`:""}
       </div>
       <div class="todo-actions">
         ${item.status==="wait"?`<button class="btn-primary btn-start-todo" data-id="${item.id}"><i class="fa-solid fa-play"></i> 开始</button>`:""}
